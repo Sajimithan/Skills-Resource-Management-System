@@ -1,0 +1,73 @@
+@baseUrl = http://localhost:5000/api
+@contentType = application/json
+
+### 1. Create New Personnel
+POST {{baseUrl}}/personnel
+Content-Type: {{contentType}}
+
+{
+    "name": "Jane Doe",
+    "email": "jane.doe@example.com",
+    "role": "Backend Developer",
+    "experience_level": "Mid-Level"
+}
+
+### 2. Retrieve All Personnel
+GET {{baseUrl}}/personnel
+
+### 3. Retrieve Single Personnel
+GET {{baseUrl}}/personnel/1
+
+### 4. Update Personnel
+PUT {{baseUrl}}/personnel/1
+Content-Type: {{contentType}}
+
+{
+    "name": "Alice Johnson Updated",
+    "email": "alice@example.com",
+    "role": "Senior Frontend Developer",
+    "experience_level": "Senior"
+}
+
+### 5. Create a Skill
+POST {{baseUrl}}/skills
+Content-Type: {{contentType}}
+
+{
+    "name": "Docker",
+    "category": "DevOps",
+    "description": "Containerization platform"
+}
+
+### 6. Assign Skill to Personnel
+# Assuming Personnel ID 1 and Skill ID 1 (React)
+POST {{baseUrl}}/personnel/1/skills
+Content-Type: {{contentType}}
+
+{
+    "skill_id": 1,
+    "proficiency_level": 5,
+    "proficiency_text": "Expert"
+}
+
+### 7. Create a Project
+POST {{baseUrl}}/projects
+Content-Type: {{contentType}}
+
+{
+    "name": "New Website Redesign",
+    "description": "Complete overhaul of company website",
+    "start_date": "2026-02-01",
+    "end_date": "2026-06-01",
+    "status": "Planning",
+    "requirements": [
+        { "skill_id": 1, "min_proficiency_level": 3 }
+    ]
+}
+
+### 8. Match Personnel for Project
+# Replace 1 with actual Project ID
+GET {{baseUrl}}/matching/1
+
+### 9. Dashboard Stats
+GET {{baseUrl}}/dashboard
