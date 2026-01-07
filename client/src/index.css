@@ -125,6 +125,22 @@ textarea {
   margin-bottom: 0.5rem;
 }
 
+.text-yellow-400 {
+  color: #facc15;
+}
+
+.text-gray-400 {
+  color: #9ca3af;
+}
+
+.text-gray-600 {
+  color: #4b5563;
+}
+
+.hover\:scale-125:hover {
+  transform: scale(1.25);
+}
+
 .form-input,
 .form-select {
   width: 100%;
@@ -386,7 +402,9 @@ textarea {
 }
 
 .bg-black-50 {
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .shadow-xl {

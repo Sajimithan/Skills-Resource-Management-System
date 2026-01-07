@@ -50,7 +50,8 @@ const ParticleCard = ({
     glowColor = DEFAULT_GLOW_COLOR,
     enableTilt = true,
     clickEffect = false,
-    enableMagnetism = false
+    enableMagnetism = false,
+    onClick
 }) => {
     const cardRef = useRef(null);
     const particlesRef = useRef([]);
@@ -208,6 +209,7 @@ const ParticleCard = ({
         };
 
         const handleClick = e => {
+            if (onClick) onClick(e);
             if (!clickEffect) return;
 
             const rect = element.getBoundingClientRect();
@@ -483,6 +485,7 @@ const MagicBento = ({
                                 enableTilt={enableTilt}
                                 clickEffect={clickEffect}
                                 enableMagnetism={enableMagnetism}
+                                onClick={card.onClick}
                             >
                                 <div className="magic-bento-card__header">
                                     <div className="magic-bento-card__label">{card.label}</div>
@@ -560,6 +563,7 @@ const MagicBento = ({
                                 };
 
                                 const handleClick = e => {
+                                    if (card.onClick) card.onClick(e);
                                     if (!clickEffect || shouldDisableAnimations) return;
 
                                     const rect = el.getBoundingClientRect();

@@ -219,7 +219,10 @@ const Personnel = () => {
 
             {/* Add Personnel Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black-50 flex items-center justify-center z-50">
+                <div
+                    className="fixed inset-0 bg-black-50 flex items-center justify-center z-50 p-4"
+                    onClick={(e) => e.target === e.currentTarget && setIsModalOpen(false)}
+                >
                     <div className="bg-surface p-6 rounded-lg w-full max-w-md animate-fade-in shadow-xl">
                         <div className="flex justify-between items-center mb-4 text-text-muted">
                             <h2 className="text-lg font-bold text-text-main">Add New Personnel</h2>
@@ -331,7 +334,10 @@ const Personnel = () => {
 
             {/* Assign Skill Modal */}
             {isSkillModalOpen && (
-                <div className="fixed inset-0 bg-black-50 flex items-center justify-center z-50">
+                <div
+                    className="fixed inset-0 bg-black-50 flex items-center justify-center z-50 p-4"
+                    onClick={(e) => e.target === e.currentTarget && setIsSkillModalOpen(false)}
+                >
                     <div className="bg-surface p-6 rounded-lg w-full max-w-md animate-fade-in shadow-xl">
                         <div className="flex justify-between items-center mb-4 text-text-muted">
                             <h2 className="text-lg font-bold text-text-main">Assign Skill to {selectedPerson?.name}</h2>

@@ -21,12 +21,15 @@ const ConfirmationModal = ({
     const isError = type === 'error';
 
     return (
-        <div className="fixed inset-0 bg-black-50 flex items-center justify-center z-1000">
+        <div
+            className="fixed inset-0 bg-black-50 flex items-center justify-center z-1000 p-4"
+            onClick={(e) => e.target === e.currentTarget && onClose()}
+        >
             <div className="bg-surface p-8 rounded-lg max-w-md animate-fade-in shadow-xl border border-primary/30">
                 <div className="flex flex-col items-center text-center">
                     <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 border-2 ${isError
-                            ? 'bg-red-500/20 border-red-500/50'
-                            : 'bg-green-500/20 border-green-500/50'
+                        ? 'bg-red-500/20 border-red-500/50'
+                        : 'bg-green-500/20 border-green-500/50'
                         }`}>
                         {isError ? (
                             <AlertCircle size={32} className="text-red-400" />

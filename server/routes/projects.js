@@ -61,12 +61,23 @@ router.get('/:id', async (req, res) => {
             const fitScore = Math.round((currentScore / (totalMaxScore || 1)) * 100);
             return {
                 ...person,
-                skills: pSkills.map(s => s.skill_name),
+                skills: pSkills.map(s => ({ id: s.skill_id, name: s.skill_name })),
                 fitScore
             };
         });
 
-        res.json({ ...project[0], requirements, assignments: detailedAssignments });
+        const [existingRatings] = await db.query(`
+            SELECT personnel_id, skill_id, rating 
+            FROM project_skill_ratings 
+            WHERE project_id = ?
+        `, [req.params.id]);
+
+        res.json({
+            ...project[0],
+            requirements,
+            assignments: detailedAssignments,
+            existingRatings
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -164,6 +175,33 @@ router.delete('/:id/assign/:personnelId', async (req, res) => {
         );
         res.json({ message: 'Personnel unassigned successfully' });
     } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Rate personnel skills
+router.post('/:id/rate', async (req, res) => {
+    const projectId = req.params.id;
+    const { ratings } = req.body; // Array of { personnel_id, skill_id, rating }
+
+    if (!ratings || !Array.isArray(ratings) || ratings.length === 0) {
+        return res.status(400).json({ message: 'No ratings provided' });
+    }
+
+    try {
+        const queries = ratings.map(r => {
+            return db.query(
+                `INSERT INTO project_skill_ratings (project_id, personnel_id, skill_id, rating) 
+                 VALUES (?, ?, ?, ?) 
+                 ON DUPLICATE KEY UPDATE rating = VALUES(rating)`,
+                [projectId, r.personnel_id, r.skill_id, r.rating]
+            );
+        });
+
+        await Promise.all(queries);
+        res.json({ message: 'Ratings submitted successfully' });
+    } catch (err) {
+        console.error(err);
         res.status(500).json({ error: err.message });
     }
 });

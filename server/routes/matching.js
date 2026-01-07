@@ -48,6 +48,15 @@ router.get('/:projectId', async (req, res) => {
             JOIN skills s ON ps.skill_id = s.id
         `);
 
+        // Get Ratings Map
+        const [ratings] = await db.query('SELECT personnel_id, skill_id, rating FROM project_skill_ratings');
+        const ratingsMap = {};
+        ratings.forEach(r => {
+            if (!ratingsMap[r.personnel_id]) ratingsMap[r.personnel_id] = {};
+            if (!ratingsMap[r.personnel_id][r.skill_id]) ratingsMap[r.personnel_id][r.skill_id] = [];
+            ratingsMap[r.personnel_id][r.skill_id].push(r.rating);
+        });
+
         // Get Utilization & Detailed Assignments (to check date overlaps)
         const [allAssignments] = await db.query(`
             SELECT pa.personnel_id, p.start_date, p.end_date, p.name as project_name, p.status
@@ -132,15 +141,39 @@ router.get('/:projectId', async (req, res) => {
                 let training = [];
                 let matched_skills = [];
 
+                // Performance Score Vars
+                let totalRatingPoints = 0;
+                let ratedSkillsCount = 0;
+
+                // General historic ratings (fallback)
+                let allHistoricRatings = [];
+                if (ratingsMap[person.id]) {
+                    Object.values(ratingsMap[person.id]).forEach(skillRatings => {
+                        allHistoricRatings.push(...skillRatings);
+                    });
+                }
+
                 requirements.forEach(req => {
                     const pSkill = pSkills.find(ps => ps.skill_id === req.skill_id);
+
+                    // Get average rating for this skill
+                    let avgRating = 0;
+                    let ratingCount = 0;
+                    if (ratingsMap[person.id] && ratingsMap[person.id][req.skill_id]) {
+                        const scores = ratingsMap[person.id][req.skill_id];
+                        avgRating = scores.reduce((a, b) => a + b, 0) / scores.length;
+                        ratingCount = scores.length;
+
+                        totalRatingPoints += avgRating;
+                        ratedSkillsCount++;
+                    }
 
                     if (pSkill) {
                         // Has skill
                         if (pSkill.proficiency_level >= req.min_proficiency_level) {
                             // Full Match for this skill
                             currentScore += 5; // Max points
-                            matched_skills.push({ ...pSkill, matchType: 'perfect' });
+                            matched_skills.push({ ...pSkill, matchType: 'perfect', avgRating: avgRating || null });
                         } else {
                             // Proficiency Gap
                             // Points based on how close they are
@@ -149,7 +182,7 @@ router.get('/:projectId', async (req, res) => {
 
                             gaps.push({ skill: req.skill_name, type: 'proficiency', current: pSkill.proficiency_level, required: req.min_proficiency_level });
                             training.push(`Upskill ${req.skill_name}: Level ${pSkill.proficiency_level} -> ${req.min_proficiency_level}`);
-                            matched_skills.push({ ...pSkill, matchType: 'gap' });
+                            matched_skills.push({ ...pSkill, matchType: 'gap', avgRating: avgRating || null });
                         }
                     } else {
                         // Missing skill
@@ -158,13 +191,39 @@ router.get('/:projectId', async (req, res) => {
                     }
                 });
 
-                // Calculate Fit Score
+                // Calculate Fit Score (Skill Proficiency Match)
                 const fitScore = Math.round((currentScore / totalMaxScore) * 100);
+
+                // Calculate Performance Score (Based on ratings 1-5)
+                let performanceScore = null;
+                if (ratedSkillsCount > 0) {
+                    // Weighted average for the skills needed
+                    const avgAcrossRequired = totalRatingPoints / ratedSkillsCount;
+                    performanceScore = Math.round((avgAcrossRequired / 5) * 100);
+                } else if (allHistoricRatings.length > 0) {
+                    // Fallback to general performance across other skills
+                    const generalAvg = allHistoricRatings.reduce((a, b) => a + b, 0) / allHistoricRatings.length;
+                    performanceScore = Math.round((generalAvg / 5) * 100);
+                }
+
+                // Weighted Overall Match
+                const availabilityScore = 100 - utilizationPct;
+                let overallMatch = 0;
+
+                if (performanceScore !== null) {
+                    // If we have history (specific or general)
+                    overallMatch = Math.round((fitScore * 0.5) + (availabilityScore * 0.3) + (performanceScore * 0.2));
+                } else {
+                    // No history at all
+                    overallMatch = Math.round((fitScore * 0.6) + (availabilityScore * 0.4));
+                }
 
                 return {
                     ...person,
                     fitScore,
                     utilizationPct,
+                    performanceScore: ratedSkillsCount > 0 ? performanceScore : null,
+                    overallMatch,
                     active_projects_count: activeProjectsCount,
                     gaps,
                     training,
@@ -172,15 +231,20 @@ router.get('/:projectId', async (req, res) => {
                 };
             });
 
-        // 4. Categorize
-        const perfectMatch = processedCandidates.filter(c => c.gaps.length === 0 && c.fitScore >= 80).sort((a, b) => b.fitScore - a.fitScore);
-        const nearMatch = processedCandidates.filter(c => c.gaps.length > 0 && c.fitScore > 40).sort((a, b) => b.fitScore - a.fitScore);
+        // 4. Categorize - Sort by Overall Match now!
+        const perfectMatchList = processedCandidates
+            .filter(c => c.overallMatch >= 80)
+            .sort((a, b) => b.overallMatch - a.overallMatch);
+
+        const nearMatchList = processedCandidates
+            .filter(c => c.overallMatch >= 50 && c.overallMatch < 80)
+            .sort((a, b) => b.overallMatch - a.overallMatch);
 
         res.json({
             project,
             requirements,
-            perfectMatch,
-            nearMatch
+            perfectMatch: perfectMatchList,
+            nearMatch: nearMatchList
         });
 
     } catch (err) {
