@@ -27,6 +27,7 @@ export const projectsApi = {
     update: (id, data) => api.put(`/projects/${id}`, data),
     addRequirement: (id, data) => api.post(`/projects/${id}/requirements`, data),
     assignPersonnel: (id, data) => api.post(`/projects/${id}/assign`, data),
+    unassign: (projectId, personnelId) => api.delete(`/projects/${projectId}/assign/${personnelId}`),
 };
 
 export const matchingApi = {

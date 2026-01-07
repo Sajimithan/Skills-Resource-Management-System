@@ -28,6 +28,11 @@ const Projects = () => {
     const [expandedMatchingRows, setExpandedMatchingRows] = useState({});
     const [activeProjectTab, setActiveProjectTab] = useState('active'); // 'active' or 'completed'
 
+    // Team View State
+    const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
+    const [teamProject, setTeamProject] = useState(null);
+    const [teamMembers, setTeamMembers] = useState([]);
+
     const toggleMatchingSkills = (id) => {
         setExpandedMatchingRows(prev => ({ ...prev, [id]: !prev[id] }));
     };
@@ -97,6 +102,32 @@ const Projects = () => {
             }
         } catch (err) {
             console.error(err);
+        }
+    };
+
+    const handleViewTeam = async (project) => {
+        setTeamProject(project);
+        setIsTeamModalOpen(true);
+        try {
+            const res = await projectsApi.getById(project.id);
+            setTeamMembers(res.data.assignments || []);
+        } catch (err) {
+            console.error(err);
+            setTeamMembers([]);
+        }
+    };
+
+    const handleUnassign = async (personnelId) => {
+        if (!teamProject) return;
+        if (!confirm('Remove this person from the project?')) return;
+        try {
+            await projectsApi.unassign(teamProject.id, personnelId);
+            // Refresh team
+            const res = await projectsApi.getById(teamProject.id);
+            setTeamMembers(res.data.assignments || []);
+            fetchProjects(); // Refresh main list
+        } catch (err) {
+            alert('Error removing team member: ' + err.message);
         }
     };
 
@@ -180,12 +211,15 @@ const Projects = () => {
                                 <h3 className="text-xl font-bold mb-2">{p.name}</h3>
                                 <p className="text-text-muted mb-4">{p.description}</p>
 
-                                <div className="flex justify-between items-center border-t border-border pt-4 mt-2">
+                                <div className="flex justify-between items-center border-t border-border pt-4 mt-2 gap-3">
                                     <div className="text-sm">
                                         <strong>Timeline:</strong><br />
                                         {p.start_date ? new Date(p.start_date).toLocaleDateString() : 'TBD'} - {p.end_date ? new Date(p.end_date).toLocaleDateString() : 'TBD'}
                                     </div>
-                                    <button onClick={() => handleFindMatch(p)} className="btn btn-primary text-sm rounded-full px-6">Find Match</button>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => handleViewTeam(p)} className="btn btn-secondary text-sm rounded-full px-6">View Team</button>
+                                        <button onClick={() => handleFindMatch(p)} className="btn btn-primary text-sm rounded-full px-6">Find Match</button>
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -219,12 +253,15 @@ const Projects = () => {
                                 <h3 className="text-xl font-bold mb-2 text-text-muted">{p.name}</h3>
                                 <p className="text-text-muted mb-4 text-sm">{p.description}</p>
 
-                                <div className="flex justify-between items-center border-t border-border pt-4 mt-2">
+                                <div className="flex justify-between items-center border-t border-border pt-4 mt-2 gap-3">
                                     <div className="text-sm text-text-muted">
                                         <strong>Project Finalized</strong><br />
                                         Completed on {p.end_date ? new Date(p.end_date).toLocaleDateString() : 'recent date'}
                                     </div>
-                                    <button onClick={() => handleFindMatch(p)} className="btn btn-secondary text-sm rounded-full px-6">Review Matches</button>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => handleViewTeam(p)} className="btn btn-secondary text-sm rounded-full px-6">View Team</button>
+                                        <button onClick={() => handleFindMatch(p)} className="btn btn-secondary text-sm rounded-full px-6">Review Matches</button>
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -391,6 +428,69 @@ const Projects = () => {
                                                 disabled={m.utilizationPct >= 100}
                                             >
                                                 Assign
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Team View Modal */}
+            {isTeamModalOpen && (
+                <div className="fixed inset-0 bg-black-50 flex items-center justify-center z-1000">
+                    <div className="bg-surface p-6 rounded-lg w-full max-w-3xl max-h-[80vh] flex flex-col animate-fade-in shadow-xl">
+                        <div className="flex justify-between items-center mb-6 flex-shrink-0">
+                            <div>
+                                <h2 className="text-2xl font-bold text-text-main">Team: {teamProject?.name}</h2>
+                                <p className="text-text-muted text-sm">Assigned personnel and their fit scores</p>
+                            </div>
+                            <button onClick={() => setIsTeamModalOpen(false)} className="btn-icon hover:bg-white/5 rounded-full transition-colors">
+                                <X size={20} strokeWidth={1.5} />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto">
+                            {teamMembers.length === 0 ? (
+                                <div className="text-center text-text-muted py-20 border-2 border-dashed border-border rounded-xl">
+                                    No team members assigned yet. Use "Find Match" to discover candidates.
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {teamMembers.map(member => (
+                                        <div key={member.id} className="card border border-border p-5 flex justify-between items-start hover:border-primary/30 transition-all">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-3 mb-3">
+                                                    <h3 className="font-bold text-lg text-text-main">{member.name}</h3>
+                                                    <span className="badge badge-gray text-xs">{member.role}</span>
+                                                    <span className={`badge text-xs font-bold ${member.fitScore >= 80 ? 'badge-green' : 'badge-yellow'}`}>
+                                                        {member.fitScore}% Match
+                                                    </span>
+                                                </div>
+
+                                                <div className="mb-2">
+                                                    <span className="text-xs text-text-muted font-semibold uppercase tracking-wider">Skills:</span>
+                                                    <div className="flex flex-wrap gap-1 mt-1">
+                                                        {member.skills && member.skills.length > 0 ? (
+                                                            member.skills.map((skill, i) => (
+                                                                <span key={i} className="badge badge-blue text-xs">
+                                                                    {skill}
+                                                                </span>
+                                                            ))
+                                                        ) : (
+                                                            <span className="text-xs text-text-muted italic">No skills listed</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={() => handleUnassign(member.id)}
+                                                className="btn btn-secondary text-xs rounded-full px-4 ml-4 hover:bg-red-500/10 hover:text-red-400 hover:border-red-400/30 transition-all"
+                                            >
+                                                Remove
                                             </button>
                                         </div>
                                     ))}

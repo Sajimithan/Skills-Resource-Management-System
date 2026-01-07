@@ -1,13 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { dashboardApi } from '../services/api';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { LayoutDashboard, Users, Briefcase, TrendingUp } from 'lucide-react';
 import MagicBento from '../components/MagicBento';
 
 const COLORS = ['#6366F1', '#3B82F6', '#10B981', '#F59E0B', '#F43F5E'];
 
 const Dashboard = () => {
-    const [stats, setStats] = useState({ utilization: [], projectStatus: [], skillDemand: [] });
+    const [stats, setStats] = useState({
+        utilization: [],
+        projectStatus: [],
+        skillDemand: [],
+        utilizationForecast: [],
+        forecastKeys: []
+    });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -128,6 +134,48 @@ const Dashboard = () => {
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
+                </div>
+            </div>
+
+            {/* Utilization Forecast Chart */}
+            <div className="card shadow-xl border border-white/5 mb-10">
+                <div className="mb-8">
+                    <h2 className="text-2xl font-black text-purple-400">Resource Load Forecast (3 Months)</h2>
+                    <p className="text-text-muted text-sm">Projected weekly allocation percentage for top personnel.</p>
+                </div>
+                <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={stats.utilizationForecast}>
+                            <defs>
+                                {stats.forecastKeys.map((key, i) => (
+                                    <linearGradient key={`grad-${i}`} id={`color-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor={COLORS[i % COLORS.length]} stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor={COLORS[i % COLORS.length]} stopOpacity={0} />
+                                    </linearGradient>
+                                ))}
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                            <XAxis dataKey="week" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} dy={10} />
+                            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
+                            <Tooltip
+                                contentStyle={{ backgroundColor: '#1e1b4b', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}
+                                itemStyle={{ color: '#fff', fontSize: '12px' }}
+                            />
+                            <Legend />
+                            {stats.forecastKeys.map((key, i) => (
+                                <Area
+                                    key={key}
+                                    type="monotone"
+                                    dataKey={key}
+                                    stroke={COLORS[i % COLORS.length]}
+                                    fillOpacity={1}
+                                    fill={`url(#color-${i})`}
+                                    strokeWidth={3}
+                                    stackId="1"
+                                />
+                            ))}
+                        </AreaChart>
+                    </ResponsiveContainer>
                 </div>
             </div>
 
