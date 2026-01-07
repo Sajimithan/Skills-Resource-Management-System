@@ -3,6 +3,7 @@ import { projectsApi, skillsApi, matchingApi } from '../services/api';
 import { Plus, CheckCircle, Clock, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import MagicBento from '../components/MagicBento';
+import PillNav from '../components/PillNav';
 
 const Projects = () => {
     const projectBentoItems = [
@@ -124,29 +125,36 @@ const Projects = () => {
             </div>
 
             <div className="mb-8">
-                <MagicBento items={projectBentoItems} spotlightRadius={200} textAutoHide={false} />
+                <MagicBento
+                    items={projectBentoItems}
+                    spotlightRadius={150}
+                    textAutoHide={false}
+                    glowColor="220, 38, 38"
+                />
             </div>
 
-            {/* Tab Navigation */}
-            <div className="flex border-b border-border mb-8 overflow-x-auto">
-                <button
-                    className={`px-6 py-3 font-bold text-sm transition-all border-b-2 whitespace-nowrap ${activeProjectTab === 'active'
-                            ? 'text-primary border-primary bg-primary/5'
-                            : 'text-text-muted border-transparent hover:text-text-main hover:bg-gray-50'
-                        }`}
-                    onClick={() => setActiveProjectTab('active')}
-                >
-                    Planning & In Progress ({projects.filter(p => p.status !== 'Completed').length})
-                </button>
-                <button
-                    className={`px-6 py-3 font-bold text-sm transition-all border-b-2 whitespace-nowrap ${activeProjectTab === 'completed'
-                            ? 'text-primary border-primary bg-primary/5'
-                            : 'text-text-muted border-transparent hover:text-text-main hover:bg-gray-50'
-                        }`}
-                    onClick={() => setActiveProjectTab('completed')}
-                >
-                    Completed Projects ({projects.filter(p => p.status === 'Completed').length})
-                </button>
+            {/* Premium Pill Navigation */}
+            <div className="mb-8">
+                <PillNav
+                    items={[
+                        {
+                            label: `Planning & In Progress (${projects.filter(p => p.status !== 'Completed').length})`,
+                            href: '#active',
+                            onClick: () => setActiveProjectTab('active')
+                        },
+                        {
+                            label: `Completed Projects (${projects.filter(p => p.status === 'Completed').length})`,
+                            href: '#completed',
+                            onClick: () => setActiveProjectTab('completed')
+                        }
+                    ]}
+                    activeHref={activeProjectTab === 'active' ? '#active' : '#completed'}
+                    baseColor="#8D153A"  /* Maroon container */
+                    pillColor="#1a1a4a"  /* Sapphire pills */
+                    pillTextColor="#94A3B8" /* Muted text */
+                    hoveredPillTextColor="#ffffff" /* Bright on hover */
+                    initialLoadAnimation={true}
+                />
             </div>
 
             {/* Active & Planning Projects Tab */}
@@ -157,8 +165,8 @@ const Projects = () => {
                             <div key={p.id} className="card">
                                 <div className="flex justify-between mb-2">
                                     <select
-                                        className={`text-xs font-bold px-2 py-1 rounded border-none cursor-pointer outline-none ${p.status === 'Active' ? 'bg-green-100 text-green-700' :
-                                            'bg-yellow-100 text-yellow-700'
+                                        className={`text-xs font-bold px-3 py-1.5 rounded-full border border-white/10 cursor-pointer outline-none transition-all ${p.status === 'Active' ? 'bg-green-500/20 text-green-400' :
+                                            'bg-yellow-500/20 text-yellow-400'
                                             }`}
                                         value={p.status}
                                         onChange={(e) => handleStatusChange(p.id, e.target.value)}
@@ -177,7 +185,7 @@ const Projects = () => {
                                         <strong>Timeline:</strong><br />
                                         {p.start_date ? new Date(p.start_date).toLocaleDateString() : 'TBD'} - {p.end_date ? new Date(p.end_date).toLocaleDateString() : 'TBD'}
                                     </div>
-                                    <button onClick={() => handleFindMatch(p)} className="btn btn-primary text-sm">Find Match</button>
+                                    <button onClick={() => handleFindMatch(p)} className="btn btn-primary text-sm rounded-full px-6">Find Match</button>
                                 </div>
                             </div>
                         ))}
@@ -198,7 +206,7 @@ const Projects = () => {
                             <div key={p.id} className="card">
                                 <div className="flex justify-between mb-2">
                                     <select
-                                        className="text-xs font-bold px-2 py-1 rounded border-none cursor-pointer outline-none bg-gray-100 text-gray-700"
+                                        className="text-xs font-bold px-3 py-1.5 rounded-full border border-white/10 cursor-pointer outline-none bg-white/5 text-text-muted transition-all"
                                         value={p.status}
                                         onChange={(e) => handleStatusChange(p.id, e.target.value)}
                                     >
@@ -216,7 +224,7 @@ const Projects = () => {
                                         <strong>Project Finalized</strong><br />
                                         Completed on {p.end_date ? new Date(p.end_date).toLocaleDateString() : 'recent date'}
                                     </div>
-                                    <button onClick={() => handleFindMatch(p)} className="btn btn-secondary text-sm">Review Matches</button>
+                                    <button onClick={() => handleFindMatch(p)} className="btn btn-secondary text-sm rounded-full px-6">Review Matches</button>
                                 </div>
                             </div>
                         ))}
@@ -231,7 +239,7 @@ const Projects = () => {
 
             {/* Create Project Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black-50 flex items-center justify-center z-50 overflow-y-auto">
+                <div className="fixed inset-0 bg-black-50 flex items-center justify-center z-1000 overflow-y-auto">
                     <div className="bg-surface p-6 rounded-lg w-full max-w-2xl animate-fade-in shadow-xl m-4">
                         <h2 className="text-lg font-bold mb-4">Create New Project</h2>
                         <form onSubmit={handleSubmit}>
@@ -293,7 +301,7 @@ const Projects = () => {
 
             {/* Matching Modal */}
             {isMatchModalOpen && (
-                <div className="fixed inset-0 bg-black-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black-50 flex items-center justify-center z-1000">
                     <div className="bg-surface p-6 rounded-lg w-full max-w-4xl h-[80vh] flex flex-col animate-fade-in shadow-xl">
                         <div className="flex justify-between items-center mb-4 text-text-muted flex-shrink-0">
                             <h2 className="text-xl font-bold text-text-main">Matching Personnel for {matchingProject?.name}</h2>

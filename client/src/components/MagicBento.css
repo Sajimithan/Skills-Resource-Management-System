@@ -55,13 +55,13 @@
     font-size: 1.25rem;
     font-weight: 700;
     margin: 0 0 0.5rem 0;
-    color: var(--text-main);
+    color: #ffffff;
     font-family: var(--font-sans);
 }
 
 .magic-bento-card__description {
     font-size: 0.875rem;
-    color: var(--text-muted);
+    color: #e2e8f0;
     line-height: 1.6;
 }
 
@@ -81,8 +81,9 @@
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     pointer-events: none;
-    opacity: 0.8;
+    opacity: 1;
     z-index: 2;
 }
 

@@ -134,7 +134,7 @@ const Personnel = () => {
         <div className="animate-fade-in">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-2xl mb-2">Personnel Management</h1>
+                    <h1 className="text-4xl font-extrabold mb-2 text-text-main">Personnel Management</h1>
                     <p className="text-text-muted">Manage system users and their skills.</p>
                 </div>
                 <button onClick={() => setIsModalOpen(true)} className="btn btn-primary">

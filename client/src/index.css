@@ -1,36 +1,32 @@
 :root {
-  /* "Lion's Pride" Theme - Maroon, Gold, and Teal */
+  /* "Lion's Pride" Dark Mode - Maroon, Sapphire, and Silver */
   --primary: #8D153A;
   /* Sri Lankan Deep Maroon */
-  --primary-hover: #600E26;
-  /* Darker Maroon */
+  --primary-hover: #AB1C47;
   --secondary: #FFBE29;
-  /* Vibrant Gold/Yellow */
+  /* Gold */
   --accent: #00A86B;
-  /* Teal/Green for success/nature */
 
-  --background: #FFFDF9;
-  /* Warm off-white, paper-like */
-  --surface: #FFFFFF;
+  --background: #0a0a20;
+  /* Deep Night Sapphire */
+  --surface: #1a1a4a;
+  /* Card Surface matching Bento */
+  --surface-hover: #23235d;
 
-  --text-main: #2D2D2D;
-  /* Softer Black */
-  --text-muted: #666666;
+  --text-main: #FFFFFF;
+  --text-muted: #94A3B8;
 
-  --border: #E8E2D2;
-  /* Warm beige border */
+  --border: rgba(255, 255, 255, 0.1);
+  --border-light: rgba(255, 255, 255, 0.05);
 
-  --danger: #D32F2F;
-  --success: #008f5d;
+  --danger: #EF4444;
+  --success: #10B981;
 
-  --shadow-sm: 0 2px 4px rgba(141, 21, 58, 0.05);
-  --shadow-md: 0 8px 16px rgba(141, 21, 58, 0.08);
-  /* Colored shadow */
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
 
-  --radius: 12px;
-  /* Smoother, friendly corners */
+  --radius: 16px;
   --font-sans: 'Poppins', 'Inter', system-ui, sans-serif;
-  /* Friendly Google Font */
 }
 
 body {
@@ -80,7 +76,7 @@ textarea {
 }
 
 .btn-secondary {
-  background-color: white;
+  background-color: var(--surface);
   border-color: var(--border);
   color: var(--text-main);
 }
@@ -142,23 +138,27 @@ textarea {
 }
 
 .badge-blue {
-  background: #DBEAFE;
-  color: #1E40AF;
+  background: rgba(30, 64, 175, 0.2);
+  color: #60A5FA;
+  border: 1px solid rgba(30, 64, 175, 0.3);
 }
 
 .badge-green {
-  background: #D1FAE5;
-  color: #065F46;
+  background: rgba(6, 95, 70, 0.2);
+  color: #34D399;
+  border: 1px solid rgba(6, 95, 70, 0.3);
 }
 
 .badge-yellow {
-  background: #FEF3C7;
-  color: #92400E;
+  background: rgba(146, 64, 14, 0.2);
+  color: #FBBF24;
+  border: 1px solid rgba(146, 64, 14, 0.3);
 }
 
 .badge-gray {
-  background: #F3F4F6;
-  color: #374151;
+  background: rgba(71, 85, 105, 0.2);
+  color: #CBD5E1;
+  border: 1px solid rgba(71, 85, 105, 0.3);
 }
 
 .table {
@@ -170,10 +170,10 @@ textarea {
 .table th {
   text-align: left;
   padding: 0.75rem 1rem;
-  background-color: #F9FAFB;
+  background-color: var(--background);
   font-weight: 500;
   color: var(--text-muted);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px solid var(--border);
 }
 
 .table td {
@@ -193,7 +193,7 @@ textarea {
 }
 
 .table tbody tr:hover {
-  background-color: #F9FAFB;
+  background-color: var(--border-light);
 }
 
 .nav-link {
@@ -210,8 +210,8 @@ textarea {
 
 .nav-link:hover,
 .nav-link.active {
-  background-color: #EEF2FF;
-  color: var(--primary);
+  background-color: rgba(141, 21, 58, 0.1);
+  color: #FF708D;
 }
 
 .header {
@@ -356,6 +356,10 @@ textarea {
 
 .z-50 {
   z-index: 50;
+}
+
+.z-1000 {
+  z-index: 1000;
 }
 
 .bg-black-50 {
@@ -566,7 +570,7 @@ textarea {
 }
 
 .suggestion-item:hover {
-  background: #f3f4f6;
+  background: var(--surface-hover);
 }
 
 .suggestion-item:first-child {
