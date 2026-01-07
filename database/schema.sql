@@ -65,6 +65,19 @@ CREATE TABLE IF NOT EXISTS project_assignments (
     UNIQUE KEY unique_project_assignment (project_id, personnel_id)
 );
 
+-- 7. Project Skill Ratings (For Performance History)
+CREATE TABLE IF NOT EXISTS project_skill_ratings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    project_id INT NOT NULL,
+    personnel_id INT NOT NULL,
+    skill_id INT NOT NULL,
+    rating INT CHECK (rating BETWEEN 1 AND 5), -- 1-5 Performance Rating
+    rated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    FOREIGN KEY (personnel_id) REFERENCES personnel(id) ON DELETE CASCADE,
+    FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE
+);
+
 -- Seed Data (Sri Lankan Context)
 INSERT IGNORE INTO skills (name, category, description) VALUES
 ('React.js', 'Frontend', 'Library for building UIs'),
