@@ -134,7 +134,7 @@ const Personnel = () => {
                                                     {p.skills.length > 5 && (
                                                         <button
                                                             onClick={() => toggleSkills(p.id)}
-                                                            className="text-[10px] font-bold text-primary hover:underline cursor-pointer ml-1"
+                                                            className="text-[10px] text-muted hover:text-primary hover:underline cursor-pointer ml-1"
                                                         >
                                                             {expandedRows[p.id] ? 'Hide' : `+${p.skills.length - 5} more`}
                                                         </button>
@@ -174,9 +174,11 @@ const Personnel = () => {
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black-50 flex items-center justify-center z-50">
                     <div className="bg-surface p-6 rounded-lg w-full max-w-md animate-fade-in shadow-xl">
-                        <div className="flex justify-between mb-4">
-                            <h2 className="text-lg font-bold">Add New Personnel</h2>
-                            <button onClick={() => setIsModalOpen(false)}><X size={20} /></button>
+                        <div className="flex justify-between items-center mb-4 text-text-muted">
+                            <h2 className="text-lg font-bold text-text-main">Add New Personnel</h2>
+                            <button onClick={() => setIsModalOpen(false)} className="btn-icon hover:bg-gray-100 rounded-full transition-colors">
+                                <X size={20} strokeWidth={1.5} />
+                            </button>
                         </div>
                         <form onSubmit={handleSubmit}>
                             <div className="form-group">
@@ -212,9 +214,11 @@ const Personnel = () => {
             {isSkillModalOpen && (
                 <div className="fixed inset-0 bg-black-50 flex items-center justify-center z-50">
                     <div className="bg-surface p-6 rounded-lg w-full max-w-md animate-fade-in shadow-xl">
-                        <div className="flex justify-between mb-4">
-                            <h2 className="text-lg font-bold">Assign Skill to {selectedPerson?.name}</h2>
-                            <button onClick={() => setIsSkillModalOpen(false)}><X size={20} /></button>
+                        <div className="flex justify-between items-center mb-4 text-text-muted">
+                            <h2 className="text-lg font-bold text-text-main">Assign Skill to {selectedPerson?.name}</h2>
+                            <button onClick={() => setIsSkillModalOpen(false)} className="btn-icon hover:bg-gray-100 rounded-full transition-colors">
+                                <X size={20} strokeWidth={1.5} />
+                            </button>
                         </div>
                         <form onSubmit={handleAssignSkill}>
                             <div className="form-group">

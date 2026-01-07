@@ -8,6 +8,17 @@ const Skills = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({ name: '', category: '', description: '' });
 
+    // Suggestion states
+    const [showSkillSuggestions, setShowSkillSuggestions] = useState(false);
+    const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
+
+    // Popular skills for auto-suggestion
+    const popularSkills = [
+        "React.js", "Node.js", "Python", "JavaScript", "TypeScript", "Java", "AWS", "Docker", "Kubernetes",
+        "SQL", "MongoDB", "UI/UX Design", "Figma", "DevOps", "Cybersecurity", "Project Management",
+        "Agile", "GraphQL", "Redis", "Terraform", "PHP", "Angular", "Vue.js", "C#", ".NET Core"
+    ];
+
     useEffect(() => {
         fetchSkills();
     }, []);
@@ -20,6 +31,36 @@ const Skills = () => {
             console.error(err);
         }
     };
+
+    // Get unique categories (case-insensitive & singular/plural deduplication)
+    const categories = Array.from(
+        skills.reduce((map, s) => {
+            if (!s.category) return map;
+            const normalized = s.category.trim();
+            // Create a key that ignores casing and trailing 's' (plural)
+            // e.g., "Soft Skills" and "Soft skill" both become "soft skill"
+            let key = normalized.toLowerCase();
+            if (key.endsWith('s') && key.length > 4 && !key.endsWith('ss')) {
+                key = key.slice(0, -1);
+            }
+
+            if (!map.has(key)) {
+                map.set(key, normalized);
+            }
+            return map;
+        }, new Map()).values()
+    );
+
+    // Filtering logic
+    const filteredSkills = popularSkills.filter(s =>
+        s.toLowerCase().includes(formData.name.toLowerCase()) &&
+        s.toLowerCase() !== formData.name.toLowerCase()
+    );
+
+    const filteredCategories = categories.filter(c =>
+        c.toLowerCase().includes(formData.category.toLowerCase()) &&
+        c.toLowerCase() !== formData.category.toLowerCase()
+    );
 
     const handleDelete = async (id) => {
         if (confirm('Are you sure?')) {
@@ -73,22 +114,88 @@ const Skills = () => {
 
             {/* Add Skill Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black-50 flex items-center justify-center z-50">
-                    <div className="bg-surface p-6 rounded-lg w-full max-w-md animate-fade-in shadow-xl">
-                        <div className="flex justify-between mb-4">
-                            <h2 className="text-lg font-bold">Add New Skill</h2>
-                            <button onClick={() => setIsModalOpen(false)}><X size={20} /></button>
+                <div className="fixed inset-0 bg-black-50 flex items-center justify-center z-50" onClick={() => { setShowSkillSuggestions(false); setShowCategorySuggestions(false); }}>
+                    <div className="bg-surface p-6 rounded-lg w-full max-w-md animate-fade-in shadow-xl" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-between items-center mb-4 text-text-muted">
+                            <h2 className="text-lg font-bold text-text-main">Add New Skill</h2>
+                            <button onClick={() => setIsModalOpen(false)} className="btn-icon hover:bg-gray-100 rounded-full transition-colors">
+                                <X size={20} strokeWidth={1.5} />
+                            </button>
                         </div>
                         <form onSubmit={handleSubmit}>
-                            <div className="form-group">
+                            <div className="form-group relative">
                                 <label className="form-label">Skill Name</label>
-                                <input required className="form-input" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                                <input
+                                    required
+                                    autoComplete="off"
+                                    className="form-input"
+                                    value={formData.name}
+                                    onChange={e => {
+                                        setFormData({ ...formData, name: e.target.value });
+                                        setShowSkillSuggestions(true);
+                                    }}
+                                    onFocus={() => {
+                                        setShowSkillSuggestions(true);
+                                        setShowCategorySuggestions(false);
+                                    }}
+                                    onBlur={() => setTimeout(() => setShowSkillSuggestions(false), 200)}
+                                    placeholder="Start typing a skill..."
+                                />
+                                {showSkillSuggestions && filteredSkills.length > 0 && (
+                                    <div className="suggestions-dropdown border border-border">
+                                        {filteredSkills.map((s, i) => (
+                                            <div
+                                                key={i}
+                                                className="suggestion-item"
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault(); // Prevent input blur
+                                                    setFormData({ ...formData, name: s });
+                                                    setShowSkillSuggestions(false);
+                                                }}
+                                            >
+                                                {s}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
-                            <div className="form-group">
+                            <div className="form-group relative">
                                 <label className="form-label">Category</label>
-                                <input required className="form-input" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} placeholder="e.g. Frontend" />
+                                <input
+                                    required
+                                    autoComplete="off"
+                                    className="form-input"
+                                    value={formData.category}
+                                    onChange={e => {
+                                        setFormData({ ...formData, category: e.target.value });
+                                        setShowCategorySuggestions(true);
+                                    }}
+                                    onFocus={() => {
+                                        setShowCategorySuggestions(true);
+                                        setShowSkillSuggestions(false);
+                                    }}
+                                    onBlur={() => setTimeout(() => setShowCategorySuggestions(false), 200)}
+                                    placeholder="e.g. Frontend"
+                                />
+                                {showCategorySuggestions && filteredCategories.length > 0 && (
+                                    <div className="suggestions-dropdown border border-border">
+                                        {filteredCategories.map((c, i) => (
+                                            <div
+                                                key={i}
+                                                className="suggestion-item"
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault(); // Prevent input blur
+                                                    setFormData({ ...formData, category: c });
+                                                    setShowCategorySuggestions(false);
+                                                }}
+                                            >
+                                                {c}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
-                            <div className="form-group">
+                            <div className="form-group relative">
                                 <label className="form-label">Description</label>
                                 <textarea className="form-input" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
                             </div>

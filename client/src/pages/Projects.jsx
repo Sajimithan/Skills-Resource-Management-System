@@ -205,9 +205,11 @@ const Projects = () => {
             {isMatchModalOpen && (
                 <div className="fixed inset-0 bg-black-50 flex items-center justify-center z-50">
                     <div className="bg-surface p-6 rounded-lg w-full max-w-4xl h-[80vh] flex flex-col animate-fade-in shadow-xl">
-                        <div className="flex justify-between mb-4 flex-shrink-0">
-                            <h2 className="text-xl font-bold">Matching Personnel for {matchingProject?.name}</h2>
-                            <button onClick={() => setIsMatchModalOpen(false)}><X size={20} /></button>
+                        <div className="flex justify-between items-center mb-4 text-text-muted flex-shrink-0">
+                            <h2 className="text-xl font-bold text-text-main">Matching Personnel for {matchingProject?.name}</h2>
+                            <button onClick={() => setIsMatchModalOpen(false)} className="btn-icon hover:bg-gray-100 rounded-full transition-colors">
+                                <X size={20} strokeWidth={1.5} />
+                            </button>
                         </div>
 
                         <div className="flex border-b border-border mb-4">
@@ -262,7 +264,7 @@ const Projects = () => {
                                                     {m.matched_skills.length > 5 && (
                                                         <button
                                                             onClick={() => toggleMatchingSkills(m.id)}
-                                                            className="text-[10px] font-bold text-primary hover:underline cursor-pointer ml-1"
+                                                            className="text-[10px] text-muted hover:text-primary hover:underline cursor-pointer ml-1"
                                                         >
                                                             {expandedMatchingRows[m.id] ? 'Hide' : `+${m.matched_skills.length - 5} more`}
                                                         </button>
