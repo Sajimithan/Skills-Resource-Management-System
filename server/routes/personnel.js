@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
 
         // 2. Fetch all personnel skills
         const [allSkills] = await db.query(`
-            SELECT ps.personnel_id, s.name, ps.proficiency_level
+            SELECT ps.personnel_id, ps.skill_id, s.name, ps.proficiency_level
             FROM personnel_skills ps
             JOIN skills s ON ps.skill_id = s.id
         `);
@@ -21,6 +21,7 @@ router.get('/', async (req, res) => {
             const rowSkills = allSkills
                 .filter(ps => ps.personnel_id == p.id) // Use loose equality for safety
                 .map(ps => ({
+                    id: ps.skill_id,
                     name: ps.name,
                     level: ps.proficiency_level
                 }));

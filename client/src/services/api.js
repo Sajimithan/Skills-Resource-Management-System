@@ -24,8 +24,12 @@ export const projectsApi = {
     getAll: () => api.get('/projects'),
     getById: (id) => api.get(`/projects/${id}`),
     create: (data) => api.post('/projects', data),
+    update: (id, data) => api.put(`/projects/${id}`, data),
     addRequirement: (id, data) => api.post(`/projects/${id}/requirements`, data),
     assignPersonnel: (id, data) => api.post(`/projects/${id}/assign`, data),
+    unassign: (projectId, personnelId) => api.delete(`/projects/${projectId}/assign/${personnelId}`),
+    rateSkills: (id, ratings) => api.post(`/projects/${id}/rate`, { ratings }),
+    delete: (id) => api.delete(`/projects/${id}`),
 };
 
 export const matchingApi = {

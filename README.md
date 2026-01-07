@@ -1,126 +1,113 @@
 # Skills & Resource Management System
 
-A full-stack web application for managing personnel skills, projects, and matching the best team members to project requirements.
+## Project Title and Description
+**Skills & Resource Management System** is a comprehensive web application designed to help organizations manage their personnel, skills, and projects effectively. It allows for tracking of employee skills, assigning them to projects based on capability and availability, and visualizing resource utilization through dynamic dashboards.
 
-## Project Overview
+The system features a **Smart Matching Algorithm** that recommends the best candidates for projects based on skill proficiency, availability, and historical performance ratings.
 
-This system allows consultancies or tech agencies to:
-- Manage a directory of **Personnel** and their skills.
-- Maintain a **Skill Catalog** with categories.
-- Create and manage **Projects** with specific skill requirements.
-- **Match** personnel to projects based on skill proficiency.
-- Visualize resource utilization via a **Dashboard**.
+## Additional Feature: Advanced Skill Matching with Performance & Utilization
+
+**Problem Solved**:
+In traditional resource management, assigning personnel solely based on "skill matching" (e.g., "Person A knows React") often leads to failure because it ignores two critical factors:
+1.  **Availability**: Is the person already overloaded with 3 other projects?
+2.  **Performance**: They might "know" React, but have they performed well with it in past projects?
+
+**My Solution**:
+I went beyond simple keyword matching and built a **Weighted Efficiency Scoring System** that calculates a `Fit Score`, `Availability Score`, and `Performance Score` to generate an aggregate **"Overall Match %"**.
+
+*   **Fit Score (60%)**: Checks if the candidate meets the *minimum proficiency level* required for each skill (not just if they have it). Gaps are highlighted as "Upskill Opportunities".
+*   **Availability Score (20%)**: Calculates a "Time-Weighted Utilization" based on date overlaps with active projects. If a user is busy during the proposed project dates, their score drops.
+*   **Performance Score (20%)**: Dynamically fetches the user's average rating for the *specific skills* required by the project from the `project_skill_ratings` table.
+
+This creates a realistic "Best Fit" recommendation rather than just a list of names.
 
 ## Technology Stack
 
-- **Frontend**: React.js (Vite), Vanilla CSS (Rich modern aesthetics), Recharts (Visualization), Lucide React (Icons).
-- **Backend**: Node.js, Express.js.
-- **Database**: MySQL.
+### Frontend
+*   **Framework**: React.js 18 (Vite)
+*   **Styling**: Tailwind CSS + Custom CSS Variables (Theme-Aware)
+*   **State Management**: React Hooks (`useState`, `useEffect`, `useContext`)
+*   **Routing**: React Router DOM 6
+*   **Icons**: Lucide React
+*   **Animations**: GSAP (GreenSock Animation Platform) for Magic Bento cards and transitions.
+*   **Visualization**: Recharts for dashboard analytics.
+
+### Backend
+*   **Runtime**: Node.js
+*   **Framework**: Express.js
+*   **Database Client**: `mysql2` (with connection pooling)
+*   **Environment**: Dockerized Service
+
+### Database
+*   **DBMS**: MySQL 8.0+
+*   **Structure**: Relational (3NF)
 
 ## Prerequisites
+Before running the application, ensure you have the following installed:
 
-- **Node.js**: v18.0.0 or higher.
-- **MySQL**: v8.0 or higher.
+*   **Node.js**: v18.0.0 or higher
+*   **MySQL**: v8.0 or higher
+*   **npm**: v9.0.0 or higher
 
-## Getting Started
+## How to Run the Applications
 
 ### 1. Database Setup
-
-Ensure your MySQL server is running.
-
-You can import the schema manually or use the provided script.
-
-**Option A: Manual Import**
-Import `database/schema.sql` into your MySQL server.
-```bash
-mysql -u root < database/schema.sql
-```
-
-**Option B: Using Initialization Script**
-1. Navigate to the server directory: `cd server`
-2. Configure `.env` file if your database credentials differ from default (User: `root`, No Password).
-3. Run:
-   ```bash
-   npm run init-db
-   ```
+1.  Open your MySQL client (Workbench, Command Line, etc.).
+2.  Create a new database or use the default name `resource_management_db`.
+3.  Import the `database/schema.sql` file to create all tables and seed initial data.
 
 ### 2. Backend Setup
+You can run the backend either locally or via Docker.
 
-1. Open a terminal and navigate to the project root.
-2. Go to the server directory:
-   ```bash
-   cd server
-   ```
-3. Install dependencies:
-   ```bash
-   npm install
-   ```
-4. Start the server:
-   ```bash
-   npm run dev
-   # Server runs on http://localhost:5000
-   ```
+**Option A: Local Node.js**
+1.  Navigate to the server directory:
+    ```bash
+    cd server
+    ```
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+3.  Configure environment variables:
+    *   Create a `.env` file in the `server` directory.
+    *   Add your DB credentials:
+        ```
+        DB_HOST=localhost
+        DB_USER=root
+        DB_PASSWORD=yourpassword
+        DB_NAME=resource_management_db
+        PORT=5000
+        ```
+4.  Start the server:
+    ```bash
+    npm run dev
+    ```
+
+**Option B: Docker**
+1.  Build the image:
+    ```bash
+    cd server
+    docker build -t skill-matrix-backend .
+    ```
+2.  Run the container (ensure your MySQL is accessible):
+    ```bash
+    docker run -p 5000:5000 --env-file .env -e DB_HOST=host.docker.internal skill-matrix-backend
+    ```
 
 ### 3. Frontend Setup
+1.  Navigate to the client directory:
+    ```bash
+    cd client
+    ```
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+3.  Start the development server:
+    ```bash
+    npm run dev
+    ```
+4.  Open your browser at `http://localhost:5173`.
 
-1. Open a new terminal.
-2. Navigate to the client directory:
-   ```bash
-   cd client
-   ```
-3. Install dependencies:
-   ```bash
-   npm install
-   ```
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
-5. Open your browser and navigate to `http://localhost:5173`.
-
-## Features
-
-### Core Features
-1.  **Personnel Management**: Add, update, delete personnel. Assign skills with proficiency levels using a 1-5 scale (Beginner to Expert).
-2.  **Skill Management**: Maintain a central catalog of skills (e.g., React, Node.js, AWS).
-3.  **Project Management**: Create projects, define start/end dates, and specify required skills with minimum proficiency levels.
-4.  **Matching Algorithm**: Automatically find personnel who meet ALL skill requirements for a given project. Matches are filtered by proficiency level.
-
-### Additional Feature: Dashboard & Utilization Visualization
-The **Dashboard** provides a high-level view of the agency's status:
-- **Personnel Utilization**: Visual bar chart showing active project assignments per person.
-- **Project Status Distribution**: Pie chart showing the ratio of Planning vs. Active vs. Completed projects.
-- **Skill Demand**: Table showing the most requested skills across all projects.
-
-## API Testing
-
-You can verify the API endpoints using the provided `requests.http` file (requires REST Client extension in VS Code) or using a tool like Postman.
-
-### Key Endpoints
-- `GET /api/personnel`: List all personnel.
-- `POST /api/projects`: Create a new project.
-- `GET /api/matching/:projectId`: Get matched personnel for a project.
-
-## Project Structure
-
-```
-skill-resource-management/
-├── client/                 # React Frontend
-│   ├── src/
-│   │   ├── components/     # Reusable components (Layout, Sidebar)
-│   │   ├── pages/          # Page components (Dashboard, Personnel, etc.)
-│   │   ├── services/       # API integration
-│   │   └── index.css       # Global styles & variables
-├── server/                 # Node.js Backend
-│   ├── config/             # DB Configuration
-│   ├── routes/             # API Routes
-│   ├── index.js            # Server entry point
-│   └── init-db.js          # Database seeding script
-├── database/
-│   └── schema.sql          # Database Schema
-└── README.md
-```
-
-## Screen Verification
-
-Screenshots of API tests and Application UI can be generated by running the application and following the "Getting Started" steps.
+## API Documentation
+The backend exposes a RESTful API. See `API_TESTING_GUIDE.md` for detailed testing instructions and example headers/bodies.

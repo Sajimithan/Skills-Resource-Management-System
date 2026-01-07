@@ -32,7 +32,52 @@ router.get('/:id', async (req, res) => {
             WHERE pa.project_id = ?
         `, [req.params.id]);
 
-        res.json({ ...project[0], requirements, assignments });
+        // Integrate with matching logic for detailed personnel info
+        const [personnelSkills] = await db.query(`
+            SELECT ps.personnel_id, ps.skill_id, ps.proficiency_level, s.name as skill_name
+            FROM personnel_skills ps
+            JOIN skills s ON ps.skill_id = s.id
+            WHERE ps.personnel_id IN (SELECT personnel_id FROM project_assignments WHERE project_id = ?)
+        `, [req.params.id]);
+
+        const detailedAssignments = assignments.map(person => {
+            const pSkills = personnelSkills.filter(ps => ps.personnel_id === person.id);
+
+            let currentScore = 0;
+            let totalMaxScore = requirements.length * 5 || 1;
+
+            requirements.forEach(req => {
+                const pSkill = pSkills.find(ps => ps.skill_id === req.skill_id);
+                if (pSkill) {
+                    if (pSkill.proficiency_level >= req.min_proficiency_level) {
+                        currentScore += 5;
+                    } else {
+                        const diff = req.min_proficiency_level - pSkill.proficiency_level;
+                        currentScore += Math.max(0, 5 - (diff * 2));
+                    }
+                }
+            });
+
+            const fitScore = Math.round((currentScore / (totalMaxScore || 1)) * 100);
+            return {
+                ...person,
+                skills: pSkills.map(s => ({ id: s.skill_id, name: s.skill_name })),
+                fitScore
+            };
+        });
+
+        const [existingRatings] = await db.query(`
+            SELECT personnel_id, skill_id, rating 
+            FROM project_skill_ratings 
+            WHERE project_id = ?
+        `, [req.params.id]);
+
+        res.json({
+            ...project[0],
+            requirements,
+            assignments: detailedAssignments,
+            existingRatings
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -117,6 +162,70 @@ router.post('/:id/assign', async (req, res) => {
         if (err.code === 'ER_DUP_ENTRY') {
             return res.status(400).json({ message: 'Personnel already assigned' });
         }
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Unassign personnel
+router.delete('/:id/assign/:personnelId', async (req, res) => {
+    try {
+        await db.query(
+            'DELETE FROM project_assignments WHERE project_id = ? AND personnel_id = ?',
+            [req.params.id, req.params.personnelId]
+        );
+        res.json({ message: 'Personnel unassigned successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Rate personnel skills
+router.post('/:id/rate', async (req, res) => {
+    const projectId = req.params.id;
+    const { ratings } = req.body; // Array of { personnel_id, skill_id, rating }
+
+    if (!ratings || !Array.isArray(ratings) || ratings.length === 0) {
+        return res.status(400).json({ message: 'No ratings provided' });
+    }
+
+    try {
+        const queries = ratings.map(r => {
+            return db.query(
+                `INSERT INTO project_skill_ratings (project_id, personnel_id, skill_id, rating) 
+                 VALUES (?, ?, ?, ?) 
+                 ON DUPLICATE KEY UPDATE rating = VALUES(rating)`,
+                [projectId, r.personnel_id, r.skill_id, r.rating]
+            );
+        });
+
+        await Promise.all(queries);
+        res.json({ message: 'Ratings submitted successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update project
+router.put('/:id', async (req, res) => {
+    const { name, description, start_date, end_date, status } = req.body;
+    try {
+        await db.query(
+            'UPDATE projects SET name = ?, description = ?, start_date = ?, end_date = ?, status = ? WHERE id = ?',
+            [name, description, start_date, end_date, status, req.params.id]
+        );
+        res.json({ message: 'Project updated successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Delete project
+router.delete('/:id', async (req, res) => {
+    try {
+        await db.query('DELETE FROM projects WHERE id = ?', [req.params.id]);
+        res.json({ message: 'Project deleted successfully' });
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
