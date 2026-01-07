@@ -123,6 +123,8 @@ router.get('/:projectId', async (req, res) => {
         const nearMatch = processedCandidates.filter(c => c.gaps.length > 0 && c.fitScore > 40).sort((a, b) => b.fitScore - a.fitScore);
 
         res.json({
+            project,
+            requirements,
             perfectMatch,
             nearMatch
         });

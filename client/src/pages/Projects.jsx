@@ -23,7 +23,7 @@ const Projects = () => {
 
     // Matching State
     const [matchingProject, setMatchingProject] = useState(null);
-    const [matchResults, setMatchResults] = useState({ perfectMatch: [], nearMatch: [] });
+    const [matchResults, setMatchResults] = useState({ perfectMatch: [], nearMatch: [], requirements: [] });
     const [isMatchModalOpen, setIsMatchModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('perfect'); // 'perfect' or 'near'
     const [expandedMatchingRows, setExpandedMatchingRows] = useState({});
@@ -93,7 +93,7 @@ const Projects = () => {
     const handleFindMatch = async (project) => {
         setMatchingProject(project);
         setIsMatchModalOpen(true);
-        setMatchResults({ perfectMatch: [], nearMatch: [] }); // clear previous
+        setMatchResults({ perfectMatch: [], nearMatch: [], requirements: [] }); // clear previous
         try {
             const res = await matchingApi.getMatches(project.id);
             if (res.data && res.data.perfectMatch) {
@@ -344,10 +344,19 @@ const Projects = () => {
             {isMatchModalOpen && (
                 <div className="fixed inset-0 bg-black-50 flex items-center justify-center z-1000">
                     <div className="bg-surface p-6 rounded-lg w-full max-w-4xl h-[80vh] flex flex-col animate-fade-in shadow-xl">
-                        <div className="flex justify-between items-center mb-4 text-text-muted flex-shrink-0">
-                            <h2 className="text-xl font-bold text-text-main">Matching Personnel for {matchingProject?.name}</h2>
-                            <button onClick={() => setIsMatchModalOpen(false)} className="btn-icon hover:bg-gray-100 rounded-full transition-colors">
-                                <X size={20} strokeWidth={1.5} />
+                        <div className="flex justify-between items-start mb-2 text-text-muted flex-shrink-0">
+                            <div>
+                                <h2 className="text-xl font-bold text-text-main">Matching Personnel for {matchingProject?.name}</h2>
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                    {matchResults.requirements?.map((req, idx) => (
+                                        <span key={idx} className="badge badge-yellow text-[10px] px-2 py-0.5 uppercase tracking-tighter font-bold">
+                                            {req.skill_name} (Lvl {req.min_proficiency_level})
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                            <button onClick={() => setIsMatchModalOpen(false)} className="btn-icon hover:bg-white/10 rounded-full transition-colors">
+                                <X size={20} />
                             </button>
                         </div>
 
