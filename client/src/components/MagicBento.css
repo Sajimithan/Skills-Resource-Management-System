@@ -1,0 +1,97 @@
+.bento-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem 0;
+    width: 100%;
+}
+
+.magic-bento-card {
+    position: relative;
+    background-color: var(--surface);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 180px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.magic-bento-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary);
+}
+
+.magic-bento-card__header {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.magic-bento-card__label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--primary);
+    background: rgba(141, 21, 58, 0.05);
+    padding: 4px 8px;
+    border-radius: 99px;
+}
+
+.magic-bento-card__content {
+    z-index: 10;
+    position: relative;
+}
+
+.magic-bento-card__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    color: var(--text-main);
+    font-family: var(--font-sans);
+}
+
+.magic-bento-card__description {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+/* Border Glow Effect */
+.magic-bento-card--border-glow::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--radius);
+    padding: 2px;
+    background: radial-gradient(circle at var(--glow-x, 50%) var(--glow-y, 50%),
+            rgba(var(--glow-color), var(--glow-intensity, 0)) 0%,
+            transparent 70%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.8;
+    z-index: 2;
+}
+
+/* Global Spotlight */
+.global-spotlight {
+    pointer-events: none;
+    z-index: 1;
+}
+
+.particle {
+    pointer-events: none;
+}
