@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
             FROM personnel p
             LEFT JOIN project_assignments pa ON p.id = pa.personnel_id
             LEFT JOIN projects proj ON pa.project_id = proj.id
-            WHERE proj.status = 'Active' OR proj.status IS NULL
+            WHERE proj.status IN ('Active', 'Planning') OR proj.id IS NULL
             GROUP BY p.id
             ORDER BY project_count DESC
             LIMIT 10

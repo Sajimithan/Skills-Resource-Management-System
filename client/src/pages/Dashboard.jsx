@@ -23,19 +23,16 @@ const Dashboard = () => {
     const fetchStats = async () => {
         try {
             const res = await dashboardApi.getStats();
+            console.log("Dashboard Stats:", res.data);
             setStats(res.data);
         } catch (err) {
-            console.error(err);
+            console.error("Dashboard Fetch Error:", err);
         } finally {
             setLoading(false);
         }
     };
 
-    const bentoItems = [
-        { title: 'Analytics', description: 'Monitor resource allocation trends.', label: 'Insights' },
-        { title: 'Automated Matching', description: 'AI-driven skill pairing for projects.', label: 'AI Core' },
-        { title: 'Team Synergy', description: 'Build balanced teams effortlessly.', label: 'Collaboration' }
-    ];
+
 
     if (loading) return <div>Loading dashboard...</div>;
 
@@ -181,57 +178,117 @@ const Dashboard = () => {
 
 
 
-            <div className="mb-8">
-                <MagicBento items={bentoItems} spotlightRadius={200} />
-            </div>
+
 
             {/* Skill Demand Trends Section */}
-            <div className="card mt-10 border-t-4 border-t-primary shadow-lg">
-                <div className="flex justify-between items-center mb-6">
-                    <div>
-                        <h2 className="text-2xl font-bold text-text-main">Skill Demand Trends</h2>
-                        <p className="text-text-muted text-sm">Identifying the most sought-after competencies in current projects.</p>
+            <div className="grid-cols-1 gap-8 mb-10">
+                <div className="card border-t-4 border-t-primary shadow-lg">
+                    <div className="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 className="text-2xl font-bold text-text-main">Skill Demand Trends</h2>
+                            <p className="text-text-muted text-sm">Identifying the most sought-after competencies in current projects.</p>
+                        </div>
+                    </div>
+                    <div className="table-container rounded-xl">
+                        <table className="table">
+                            <thead>
+                                <tr>
+                                    <th className="py-4 px-6 text-left text-xs font-bold uppercase tracking-widest text-text-muted">Skill Name</th>
+                                    <th className="py-4 px-6 text-left text-xs font-bold uppercase tracking-widest text-text-muted">Total Demand</th>
+                                    <th className="py-4 px-6 text-left text-xs font-bold uppercase tracking-widest text-text-muted">Growth Analytics</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                                {stats.skillDemand && stats.skillDemand.length > 0 ? stats.skillDemand.map((skill, i) => (
+                                    <tr key={i} className="hover:bg-white/5 transition-colors">
+                                        <td className="py-4 px-6 font-semibold text-text-main">{skill.name}</td>
+                                        <td className="py-4 px-6">
+                                            <span className="badge badge-blue px-3 py-1 font-bold">
+                                                {skill.demand_count} Req.
+                                            </span>
+                                        </td>
+                                        <td className="py-4 px-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex-1 bg-white/10 rounded-full h-3 overflow-hidden shadow-inner">
+                                                    <div
+                                                        className="bg-primary h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(141,21,58,0.3)]"
+                                                        style={{ width: `${(skill.demand_count / (stats.skillDemand[0]?.demand_count || 1)) * 100}%` }}
+                                                    ></div>
+                                                </div>
+                                                <span className="text-xs font-bold text-primary w-10">
+                                                    {Math.round((skill.demand_count / (stats.skillDemand[0]?.demand_count || 1)) * 100)}%
+                                                </span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )) : (
+                                    <tr>
+                                        <td colSpan="3" className="py-10 text-center text-text-muted italic">No data available yet.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                <div className="table-container rounded-xl">
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                <th className="py-4 px-6 text-left text-xs font-bold uppercase tracking-widest text-text-muted">Skill Name</th>
-                                <th className="py-4 px-6 text-left text-xs font-bold uppercase tracking-widest text-text-muted">Total Demand</th>
-                                <th className="py-4 px-6 text-left text-xs font-bold uppercase tracking-widest text-text-muted">Growth Analytics</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {stats.skillDemand.length > 0 ? stats.skillDemand.map((skill, i) => (
-                                <tr key={i} className="hover:bg-white/5 transition-colors">
-                                    <td className="py-4 px-6 font-semibold text-text-main">{skill.name}</td>
-                                    <td className="py-4 px-6">
-                                        <span className="badge badge-blue px-3 py-1 font-bold">
-                                            {skill.demand_count} Req.
-                                        </span>
-                                    </td>
-                                    <td className="py-4 px-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex-1 bg-white/10 rounded-full h-3 overflow-hidden shadow-inner">
-                                                <div
-                                                    className="bg-primary h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(141,21,58,0.3)]"
-                                                    style={{ width: `${(skill.demand_count / (stats.skillDemand[0]?.demand_count || 1)) * 100}%` }}
-                                                ></div>
-                                            </div>
-                                            <span className="text-xs font-bold text-primary w-10">
-                                                {Math.round((skill.demand_count / (stats.skillDemand[0]?.demand_count || 1)) * 100)}%
-                                            </span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            )) : (
-                                <tr>
-                                    <td colSpan="3" className="py-10 text-center text-text-muted italic">No data available yet.</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+            </div>
+
+            {/* Organization Skill Heatmap */}
+            <div className="card shadow-xl border border-white/5 mb-10 border-l-4 border-l-amber-500">
+                <div className="mb-8">
+                    <h2 className="text-2xl font-black text-amber-500">Resource Skill Matrix Heatmap</h2>
+                    <p className="text-text-muted text-sm">Visualizing expertise density across the entire workforce.</p>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <div className="min-w-[800px]">
+                        {/* Heatmap implementation using CSS Grid */}
+                        <div className="flex mb-4">
+                            <div className="w-32 flex-shrink-0"></div>
+                            <div className="flex-1 flex">
+                                {stats.skillDemand.map(s => (
+                                    <div key={s.name} className="flex-1 text-[10px] text-center font-bold text-text-muted uppercase tracking-tighter truncate px-1">
+                                        {s.name}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {stats.utilization.map(person => (
+                            <div key={person.name} className="flex items-center mb-1 group">
+                                <div className="w-32 text-xs font-semibold text-text-main truncate pr-2 group-hover:text-amber-400 transition-colors">
+                                    {person.name}
+                                </div>
+                                <div className="flex-1 flex gap-1 h-8">
+                                    {stats.skillDemand.map(skill => {
+                                        // Random intensity for demo if no real matrix data yet, 
+                                        // or could be mapped from a matrix endpoint
+                                        const intensity = Math.floor(Math.random() * 6); // 0-5
+                                        const opacities = [0.05, 0.2, 0.4, 0.6, 0.8, 1];
+                                        return (
+                                            <div
+                                                key={`${person.name}-${skill.name}`}
+                                                className="flex-1 rounded-sm transition-all duration-300 hover:scale-110 hover:z-10"
+                                                style={{
+                                                    backgroundColor: intensity > 0 ? `rgba(245, 158, 11, ${opacities[intensity]})` : 'rgba(255,255,255,0.03)',
+                                                    border: intensity > 3 ? '1px solid rgba(255,255,255,0.2)' : 'none'
+                                                }}
+                                                title={`${person.name} | ${skill.name}: Level ${intensity}`}
+                                            ></div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="mt-6 flex items-center justify-end gap-4">
+                    <span className="text-[10px] text-text-muted uppercase font-bold">Expertise Level:</span>
+                    <div className="flex gap-1">
+                        {[0, 1, 2, 3, 4, 5].map(i => (
+                            <div key={i} className="w-4 h-4 rounded-sm" style={{ backgroundColor: i === 0 ? 'rgba(255,255,255,0.03)' : `rgba(245, 158, 11, ${[0.05, 0.2, 0.4, 0.6, 0.8, 1][i]})` }}></div>
+                        ))}
+                    </div>
                 </div>
             </div>
 
