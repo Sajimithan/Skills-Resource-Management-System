@@ -48,28 +48,82 @@ router.get('/:projectId', async (req, res) => {
             JOIN skills s ON ps.skill_id = s.id
         `);
 
-        // Get Utilization (Active Projects Count)
-        // Assuming 'Active' or 'Planning' projects count towards utilization
-        const [assignments] = await db.query(`
-            SELECT pa.personnel_id, COUNT(*) as active_count
+        // Get Utilization & Detailed Assignments (to check date overlaps)
+        const [allAssignments] = await db.query(`
+            SELECT pa.personnel_id, p.start_date, p.end_date, p.name as project_name, p.status
             FROM project_assignments pa
             JOIN projects p ON pa.project_id = p.id
             WHERE p.status IN ('Active', 'Planning')
-            GROUP BY pa.personnel_id
         `);
 
-        const utilizationMap = {};
-        assignments.forEach(a => utilizationMap[a.personnel_id] = a.active_count);
+        const pAssignmentsMap = {};
+        allAssignments.forEach(a => {
+            if (!pAssignmentsMap[a.personnel_id]) pAssignmentsMap[a.personnel_id] = [];
+            pAssignmentsMap[a.personnel_id].push(a);
+        });
 
         // 3. Process Matching Logic - Filter out already assigned
         const processedCandidates = personnel
             .filter(person => !assignedIds.has(person.id))
             .map(person => {
                 const pSkills = personnelSkills.filter(ps => ps.personnel_id === person.id);
-                const activeProjects = utilizationMap[person.id] || 0;
+                const pAsgns = pAssignmentsMap[person.id] || [];
+                const activeProjects = pAsgns.length;
 
-                // Utilization Score (Heuristic: 1 project = 33%, 3 = 100%)
-                const utilizationPct = Math.min(activeProjects * 33, 100);
+                // Date Overlap Detection & Weighted Utilization Calculation
+                const targetStart = project.start_date ? new Date(project.start_date) : null;
+                const targetEnd = project.end_date ? new Date(project.end_date) : null;
+
+                let utilizationPct = 0;
+                let activeProjectsCount = 0; // For pure count display
+
+                // Constraints
+                const WEEKLY_CAPACITY_HOURS = 45; // 9hrs * 5 days
+                const ESTIMATED_PROJECT_LOAD_HOURS = 15; // Assume 15hrs/week per project
+                const LOAD_RATIO = ESTIMATED_PROJECT_LOAD_HOURS / WEEKLY_CAPACITY_HOURS; // 0.333...
+
+                if (targetStart && targetEnd) {
+                    const targetDurationTime = targetEnd.getTime() - targetStart.getTime();
+                    const targetDurationDays = targetDurationTime / (1000 * 3600 * 24);
+
+                    if (targetDurationDays > 0) {
+                        let totalWeightedLoad = 0;
+
+                        pAsgns.forEach(asgn => {
+                            const asgnStart = asgn.start_date ? new Date(asgn.start_date) : null;
+                            const asgnEnd = asgn.end_date ? new Date(asgn.end_date) : null;
+
+                            if (asgnStart && asgnEnd) {
+                                // Check overlap
+                                const overlapStart = asgnStart > targetStart ? asgnStart : targetStart;
+                                const overlapEnd = asgnEnd < targetEnd ? asgnEnd : targetEnd;
+
+                                if (overlapStart < overlapEnd) {
+                                    // There is an overlap
+                                    const overlapTime = overlapEnd.getTime() - overlapStart.getTime();
+                                    const overlapDays = overlapTime / (1000 * 3600 * 24);
+
+                                    // Calculate how much of the target project's life is affected by this overlap
+                                    // ex: Project is 12 weeks. Overlap is 3 weeks. Ratio is 0.25.
+                                    const overlapRatio = overlapDays / targetDurationDays;
+
+                                    // Add to total load
+                                    // Contribution = (Portion of Time) * (Load Intensity)
+                                    totalWeightedLoad += (overlapRatio * LOAD_RATIO);
+
+                                    activeProjectsCount++; // Count this as an active/conflicting project
+                                }
+                            }
+                        });
+
+                        // Convert to Percentage (0.33 -> 33%)
+                        utilizationPct = Math.min(Math.round(totalWeightedLoad * 100), 100);
+                    }
+                } else {
+                    // Fallback if no dates set: Use simple count heuristic
+                    activeProjectsCount = pAsgns.length;
+                    utilizationPct = Math.min(activeProjectsCount * 33, 100);
+                }
 
                 let matchScore = 0;
                 let totalMaxScore = requirements.length * 5; // Max 5 points per skill
@@ -111,7 +165,7 @@ router.get('/:projectId', async (req, res) => {
                     ...person,
                     fitScore,
                     utilizationPct,
-                    active_projects_count: activeProjects,
+                    active_projects_count: activeProjectsCount,
                     gaps,
                     training,
                     matched_skills

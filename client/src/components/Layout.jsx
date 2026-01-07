@@ -10,20 +10,11 @@ const Layout = () => {
         <div className="flex h-screen bg-background text-text-main">
             {/* Sidebar */}
             <aside className="w-64 bg-surface border-r border-border flex flex-col fixed h-full z-20">
-                <div className="p-6 border-b border-border flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="bg-primary text-white p-2 rounded-lg">
-                            <Zap size={20} />
-                        </div>
-                        <span className="font-bold text-lg">SkillMatrix</span>
+                <div className="p-6 border-b border-border flex items-center gap-2">
+                    <div className="bg-primary text-white p-2 rounded-lg">
+                        <Zap size={20} />
                     </div>
-                    <button
-                        onClick={toggleTheme}
-                        className="p-2 rounded-full hover:bg-white/5 text-text-muted hover:text-primary transition-colors"
-                        title="Toggle Theme"
-                    >
-                        {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-                    </button>
+                    <span className="font-bold text-lg">SkillMatrix</span>
                 </div>
 
                 <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -54,14 +45,23 @@ const Layout = () => {
                 </nav>
 
                 <div className="p-4 border-t border-border">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-primary font-bold" style={{ backgroundColor: '#FFBE29', color: '#8D153A' }}>
-                            SP
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-primary font-bold" style={{ backgroundColor: '#FFBE29', color: '#8D153A' }}>
+                                SP
+                            </div>
+                            <div className="text-sm">
+                                <div className="font-medium">Sajith Perera</div>
+                                <div className="text-text-muted text-xs">Project Manager</div>
+                            </div>
                         </div>
-                        <div className="text-sm">
-                            <div className="font-medium">Sajith Perera</div>
-                            <div className="text-text-muted text-xs">Project Manager</div>
-                        </div>
+                        <button
+                            onClick={toggleTheme}
+                            className="p-2 rounded-full hover:bg-black/5 text-text-muted hover:text-primary transition-colors"
+                            title="Toggle Theme"
+                        >
+                            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                        </button>
                     </div>
                 </div>
             </aside>
