@@ -1,16 +1,12 @@
 :root {
-  /* "Lion's Pride" Dark Mode - Maroon, Sapphire, and Silver */
+  /* "Lion's Pride" Dark Mode (Default) */
   --primary: #8D153A;
-  /* Sri Lankan Deep Maroon */
   --primary-hover: #AB1C47;
   --secondary: #FFBE29;
-  /* Gold */
   --accent: #00A86B;
 
   --background: #0a0a20;
-  /* Deep Night Sapphire */
   --surface: #1a1a4a;
-  /* Card Surface matching Bento */
   --surface-hover: #23235d;
 
   --text-main: #FFFFFF;
@@ -27,6 +23,26 @@
 
   --radius: 16px;
   --font-sans: 'Poppins', 'Inter', system-ui, sans-serif;
+}
+
+[data-theme="light"] {
+  /* Light Mode Overrides */
+  --background: #F1F5F9;
+  /* Slate 100 */
+  --surface: #FFFFFF;
+  --surface-hover: #F8FAFC;
+  /* Slate 50 */
+
+  --text-main: #0F172A;
+  /* Slate 900 */
+  --text-muted: #64748B;
+  /* Slate 500 */
+
+  --border: rgba(0, 0, 0, 0.1);
+  --border-light: rgba(0, 0, 0, 0.05);
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 body {
@@ -116,7 +132,7 @@ textarea {
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background-color: var(--surface);
-  color: #ffffff;
+  color: var(--text-main);
   font-size: 0.875rem;
   transition: border-color 0.2s;
 }

@@ -1,17 +1,29 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Users, Book, Briefcase, LayoutDashboard, Zap } from 'lucide-react';
+import { Users, Book, Briefcase, LayoutDashboard, Zap, Sun, Moon } from 'lucide-react';
+import { useTheme } from './ThemeContext';
 
 const Layout = () => {
+    const { theme, toggleTheme } = useTheme();
+
     return (
         <div className="flex h-screen bg-background text-text-main">
             {/* Sidebar */}
             <aside className="w-64 bg-surface border-r border-border flex flex-col fixed h-full z-20">
-                <div className="p-6 border-b border-border flex items-center gap-2">
-                    <div className="bg-primary text-white p-2 rounded-lg">
-                        <Zap size={20} />
+                <div className="p-6 border-b border-border flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <div className="bg-primary text-white p-2 rounded-lg">
+                            <Zap size={20} />
+                        </div>
+                        <span className="font-bold text-lg">SkillMatrix</span>
                     </div>
-                    <span className="font-bold text-lg">SkillMatrix</span>
+                    <button
+                        onClick={toggleTheme}
+                        className="p-2 rounded-full hover:bg-white/5 text-text-muted hover:text-primary transition-colors"
+                        title="Toggle Theme"
+                    >
+                        {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                    </button>
                 </div>
 
                 <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
