@@ -5,6 +5,22 @@
 
 The system features a **Smart Matching Algorithm** that recommends the best candidates for projects based on skill proficiency, availability, and historical performance ratings.
 
+## Additional Feature: Advanced Skill Matching with Performance & Utilization
+
+**Problem Solved**:
+In traditional resource management, assigning personnel solely based on "skill matching" (e.g., "Person A knows React") often leads to failure because it ignores two critical factors:
+1.  **Availability**: Is the person already overloaded with 3 other projects?
+2.  **Performance**: They might "know" React, but have they performed well with it in past projects?
+
+**My Solution**:
+I went beyond simple keyword matching and built a **Weighted Efficiency Scoring System** that calculates a `Fit Score`, `Availability Score`, and `Performance Score` to generate an aggregate **"Overall Match %"**.
+
+*   **Fit Score (60%)**: Checks if the candidate meets the *minimum proficiency level* required for each skill (not just if they have it). Gaps are highlighted as "Upskill Opportunities".
+*   **Availability Score (20%)**: Calculates a "Time-Weighted Utilization" based on date overlaps with active projects. If a user is busy during the proposed project dates, their score drops.
+*   **Performance Score (20%)**: Dynamically fetches the user's average rating for the *specific skills* required by the project from the `project_skill_ratings` table.
+
+This creates a realistic "Best Fit" recommendation rather than just a list of names.
+
 ## Technology Stack
 
 ### Frontend
