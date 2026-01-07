@@ -41,19 +41,11 @@ const Layout = () => {
                         <span className="font-bold text-lg">SkillMatrix</span>
                     </div>
                     {/* Close Button (Mobile Only) */}
-                    <button
-                        onClick={() => setIsSidebarOpen(false)}
-                        className="md:hidden text-text-muted hover:text-white"
-                    >
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                    </button>
+
                 </div>
 
                 <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                    <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2 ml-2">Main</div>
+
 
                     <NavLink
                         to="/"
