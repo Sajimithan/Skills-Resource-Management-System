@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { skillsApi } from '../services/api';
 import { Plus, Trash, X } from 'lucide-react';
-import Magnet from '../components/Magnet';
 import MagicBento from '../components/MagicBento';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 const Skills = () => {
     const [skills, setSkills] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({ name: '', category: '', description: '' });
+
+    // Confirmation Modal State
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, message: '', type: 'success', onConfirm: null });
 
     // Suggestion states
     const [showSkillSuggestions, setShowSkillSuggestions] = useState(false);
@@ -78,14 +81,20 @@ const Skills = () => {
     );
 
     const handleDelete = async (id) => {
-        if (confirm('Are you sure?')) {
-            try {
-                await skillsApi.delete(id);
-                fetchSkills();
-            } catch (err) {
-                console.error(err);
+        setConfirmModal({
+            isOpen: true,
+            message: 'Are you sure you want to delete this skill?',
+            type: 'confirm',
+            onConfirm: async () => {
+                try {
+                    await skillsApi.delete(id);
+                    fetchSkills();
+                    setConfirmModal({ isOpen: true, message: 'Skill deleted successfully!', type: 'success' });
+                } catch (err) {
+                    setConfirmModal({ isOpen: true, message: 'Error: ' + err.message, type: 'error' });
+                }
             }
-        }
+        });
     };
 
     const handleSubmit = async (e) => {
@@ -95,8 +104,9 @@ const Skills = () => {
             setIsModalOpen(false);
             fetchSkills();
             setFormData({ name: '', category: '', description: '' });
+            setConfirmModal({ isOpen: true, message: 'Skill created successfully!', type: 'success' });
         } catch (err) {
-            alert("Error: " + (err.response?.data?.message || err.message));
+            setConfirmModal({ isOpen: true, message: 'Error: ' + (err.response?.data?.message || err.message), type: 'error' });
         }
     };
     return (
@@ -106,11 +116,9 @@ const Skills = () => {
                     <h1 className="text-5xl font-black mb-2 text-text-main tracking-tighter">Skills Catalog</h1>
                     <p className="text-text-muted text-lg">Define the skills available in your organization.</p>
                 </div>
-                <Magnet padding={50} disabled={false} magnetStrength={20}>
-                    <button onClick={() => setIsModalOpen(true)} className="btn btn-primary btn-lg shadow-lg">
-                        <Plus size={20} /> Add Skill
-                    </button>
-                </Magnet>
+                <button onClick={() => setIsModalOpen(true)} className="btn btn-primary btn-lg shadow-lg">
+                    <Plus size={20} /> Add Skill
+                </button>
             </div>
 
             <div className="mb-12">
@@ -227,6 +235,14 @@ const Skills = () => {
                     </div>
                 )
             }
+
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                message={confirmModal.message}
+                type={confirmModal.type}
+                onConfirm={confirmModal.onConfirm}
+            />
         </div >
     );
 };

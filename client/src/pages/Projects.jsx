@@ -4,6 +4,7 @@ import { Plus, CheckCircle, Clock, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import MagicBento from '../components/MagicBento';
 import PillNav from '../components/PillNav';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 const Projects = () => {
     const projectBentoItems = [
@@ -32,6 +33,9 @@ const Projects = () => {
     const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
     const [teamProject, setTeamProject] = useState(null);
     const [teamMembers, setTeamMembers] = useState([]);
+
+    // Confirmation Modal State
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, message: '', type: 'success', onConfirm: null });
 
     const toggleMatchingSkills = (id) => {
         setExpandedMatchingRows(prev => ({ ...prev, [id]: !prev[id] }));
@@ -82,7 +86,7 @@ const Projects = () => {
             await projectsApi.update(projectId, { ...project, status: newStatus });
             fetchProjects();
         } catch (err) {
-            alert("Error updating status: " + err.message);
+            setConfirmModal({ isOpen: true, message: 'Error: ' + err.message, type: 'error' });
         }
     };
 
@@ -127,7 +131,7 @@ const Projects = () => {
             setTeamMembers(res.data.assignments || []);
             fetchProjects(); // Refresh main list
         } catch (err) {
-            alert('Error removing team member: ' + err.message);
+            setConfirmModal({ isOpen: true, message: 'Error removing team member: ' + err.message, type: 'error' });
         }
     };
 
@@ -135,13 +139,13 @@ const Projects = () => {
         if (!matchingProject) return;
         try {
             await projectsApi.assignPersonnel(matchingProject.id, { personnel_id: personId });
-            alert("Assigned successfully!");
+            setConfirmModal({ isOpen: true, message: 'Personnel assigned successfully!', type: 'success' });
             setIsMatchModalOpen(false);
-            // Optional: refresh matches or project list
+            fetchProjects();
         } catch (err) {
-            alert(err.response?.data?.message || err.message);
+            setConfirmModal({ isOpen: true, message: 'Error: ' + err.message, type: 'error' });
         }
-    }
+    };
 
     return (
         <div className="animate-fade-in">
@@ -500,6 +504,14 @@ const Projects = () => {
                     </div>
                 </div>
             )}
+
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                message={confirmModal.message}
+                type={confirmModal.type}
+                onConfirm={confirmModal.onConfirm}
+            />
         </div>
     );
 };

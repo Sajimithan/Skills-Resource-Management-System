@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { personnelApi, skillsApi } from '../services/api';
-import { Plus, Trash, Search, X } from 'lucide-react';
+import { Plus, X, Trash } from 'lucide-react';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 const Personnel = () => {
     const [personnel, setPersonnel] = useState([]);
@@ -8,6 +9,8 @@ const Personnel = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
     const [selectedPerson, setSelectedPerson] = useState(null);
+    // Confirmation Modal State
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, message: '', type: 'success', onConfirm: null });
 
     const [formData, setFormData] = useState({
         name: '',
@@ -52,14 +55,20 @@ const Personnel = () => {
     }
 
     const handleDelete = async (id) => {
-        if (confirm('Are you sure?')) {
-            try {
-                await personnelApi.delete(id);
-                fetchPersonnel();
-            } catch (err) {
-                console.error(err);
+        setConfirmModal({
+            isOpen: true,
+            message: 'Are you sure you want to delete this person?',
+            type: 'confirm',
+            onConfirm: async () => {
+                try {
+                    await personnelApi.delete(id);
+                    fetchPersonnel();
+                    setConfirmModal({ isOpen: true, message: 'Personnel deleted successfully!', type: 'success' });
+                } catch (err) {
+                    setConfirmModal({ isOpen: true, message: 'Error: ' + err.message, type: 'error' });
+                }
             }
-        }
+        });
     };
 
     const handleAddInitialSkill = () => {
@@ -98,10 +107,10 @@ const Personnel = () => {
                 initialSkills: []
             });
             fetchPersonnel();
-            alert("Personnel added with skills!");
+            setConfirmModal({ isOpen: true, message: 'Personnel added with skills!', type: 'success' });
 
         } catch (err) {
-            alert("Error: " + (err.response?.data?.message || err.message));
+            setConfirmModal({ isOpen: true, message: 'Error: ' + (err.response?.data?.message || err.message), type: 'error' });
         }
     };
 
@@ -118,10 +127,10 @@ const Personnel = () => {
             await personnelApi.assignSkill(selectedPerson.id, skillFormData);
             setIsSkillModalOpen(false);
             setSkillFormData({ skill_id: '', proficiency_level: '1' }); // Reset skill form
-            await fetchPersonnel(); // Wait for refresh
-            alert("Skill Assigned!");
+            await fetchPersonnel();
+            setConfirmModal({ isOpen: true, message: 'Skill assigned successfully!', type: 'success' });
         } catch (err) {
-            alert("Error: " + (err.response?.data?.message || err.message));
+            setConfirmModal({ isOpen: true, message: 'Error: ' + (err.response?.data?.message || err.message), type: 'error' });
         }
     }
 
@@ -357,6 +366,13 @@ const Personnel = () => {
                 </div>
             )}
 
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                message={confirmModal.message}
+                type={confirmModal.type}
+                onConfirm={confirmModal.onConfirm}
+            />
         </div>
     );
 };
