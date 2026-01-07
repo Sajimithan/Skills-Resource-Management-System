@@ -940,6 +940,69 @@ textarea {
   overflow: hidden;
 }
 
-.font-mono {
-  font-family: monospace;
+/* Sidebar Responsiveness */
+.app-sidebar {
+  width: 16rem;
+  position: fixed;
+  height: 100%;
+  z-index: 50;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-right: 1px solid var(--border);
+  background-color: var(--surface);
+}
+
+.app-main {
+  flex: 1;
+  margin-left: 16rem;
+  padding: 2rem;
+  overflow-y: auto;
+  transition: margin-left 0.3s ease;
+}
+
+.mobile-header-bar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 45;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .app-sidebar {
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .app-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .app-main {
+    margin-left: 0;
+    padding: 1rem;
+  }
+
+  .mobile-header-bar {
+    display: flex;
+  }
+
+  .sidebar-overlay.open {
+    display: block;
+    opacity: 1;
+  }
 }

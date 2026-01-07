@@ -5,43 +5,91 @@ import { useTheme } from './ThemeContext';
 
 const Layout = () => {
     const { theme, toggleTheme } = useTheme();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     return (
-        <div className="flex h-screen bg-background text-text-main">
-            {/* Sidebar */}
-            <aside className="w-64 bg-surface border-r border-border flex flex-col fixed h-full z-20">
-                <div className="p-6 border-b border-border flex items-center gap-2">
-                    <div className="bg-primary text-white p-2 rounded-lg">
-                        <Zap size={20} />
-                    </div>
+        <div className="flex h-screen bg-background text-text-main flex-col md:flex-row">
+            {/* Mobile Header */}
+            <div className="mobile-header-bar">
+                <div className="flex items-center gap-2">
+                    <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 text-text-muted hover:text-primary">
+                        <LayoutDashboard size={24} />
+                    </button>
                     <span className="font-bold text-lg">SkillMatrix</span>
+                </div>
+                <button
+                    onClick={toggleTheme}
+                    className="p-2 rounded-full hover:bg-black/5 text-text-muted hover:text-primary transition-colors"
+                >
+                    {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                </button>
+            </div>
+
+            {/* Backdrop Overlay */}
+            <div
+                className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`}
+                onClick={() => setIsSidebarOpen(false)}
+            />
+
+            {/* Sidebar */}
+            <aside className={`app-sidebar flex flex-col ${isSidebarOpen ? 'open' : ''}`}>
+                <div className="p-6 border-b border-border flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <div className="bg-primary text-white p-2 rounded-lg">
+                            <Zap size={20} />
+                        </div>
+                        <span className="font-bold text-lg">SkillMatrix</span>
+                    </div>
+                    {/* Close Button (Mobile Only) */}
+                    <button
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="md:hidden text-text-muted hover:text-white"
+                    >
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                 </div>
 
                 <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                     <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2 ml-2">Main</div>
 
-                    <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                    <NavLink
+                        to="/"
+                        onClick={() => setIsSidebarOpen(false)}
+                        className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                    >
                         <LayoutDashboard size={20} />
                         <span>Dashboard</span>
                     </NavLink>
 
-                    <NavLink to="/personnel" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                    <NavLink
+                        to="/personnel"
+                        onClick={() => setIsSidebarOpen(false)}
+                        className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                    >
                         <Users size={20} />
                         <span>Personnel</span>
                     </NavLink>
 
-                    <NavLink to="/skills" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                    <NavLink
+                        to="/skills"
+                        onClick={() => setIsSidebarOpen(false)}
+                        className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                    >
                         <Book size={20} />
                         <span>Skills Catalog</span>
                     </NavLink>
 
-                    <NavLink to="/projects" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                    <NavLink
+                        to="/projects"
+                        onClick={() => setIsSidebarOpen(false)}
+                        className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                    >
                         <Briefcase size={20} />
                         <span>Projects</span>
                     </NavLink>
-
-
-                    {/* Add more links if needed */}
                 </nav>
 
                 <div className="p-4 border-t border-border">
@@ -57,7 +105,7 @@ const Layout = () => {
                         </div>
                         <button
                             onClick={toggleTheme}
-                            className="p-2 rounded-full hover:bg-black/5 text-text-muted hover:text-primary transition-colors"
+                            className="p-2 rounded-full hover:bg-black/5 text-text-muted hover:text-primary transition-colors desktop-only hidden md:block" // Hidden on mobile, shown in header instead
                             title="Toggle Theme"
                         >
                             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
@@ -67,7 +115,7 @@ const Layout = () => {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 ml-64 p-8 overflow-y-auto">
+            <main className="app-main">
                 <Outlet />
             </main>
         </div>
