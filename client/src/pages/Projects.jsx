@@ -656,21 +656,21 @@ const Projects = () => {
 
                                                 {/* Skills & Gaps */}
                                                 <div className="mb-3">
-                                                    {(expandedMatchingRows[m.id] ? m.matched_skills : m.matched_skills.slice(0, 5)).map((ms, i) => (
+                                                    {((expandedMatchingRows[m.id] ? m.matched_skills : m.matched_skills?.slice(0, 5)) || []).map((ms, i) => (
                                                         <span key={i} className="badge badge-green text-xs mr-1 mb-1 inline-block">
                                                             {ms.skill_name || ms.name} (Lvl {ms.proficiency_level})
                                                             {ms.avgRating && <span className="ml-1 text-[9px] text-yellow-200">★ {(ms.avgRating).toFixed(1)}</span>}
                                                         </span>
                                                     ))}
-                                                    {m.matched_skills.length > 5 && (
+                                                    {(m.matched_skills?.length || 0) > 5 && (
                                                         <button
                                                             onClick={() => toggleMatchingSkills(m.id)}
                                                             className="text-[10px] text-muted hover:text-primary hover:underline cursor-pointer ml-1"
                                                         >
-                                                            {expandedMatchingRows[m.id] ? 'Hide' : `+${m.matched_skills.length - 5} more`}
+                                                            {expandedMatchingRows[m.id] ? 'Hide' : `+${(m.matched_skills?.length || 0) - 5} more`}
                                                         </button>
                                                     )}
-                                                    {m.gaps.map((gap, i) => (
+                                                    {(m.gaps || []).map((gap, i) => (
                                                         <span key={i} className="badge badge-yellow text-xs mr-1 mb-1 inline-block border border-red-200">
                                                             Missing: {gap.skill}
                                                         </span>

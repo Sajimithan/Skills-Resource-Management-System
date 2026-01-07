@@ -31,7 +31,7 @@ router.get('/:projectId', async (req, res) => {
             // Edge Case: Project has no requirements defined yet. Return everyone as a 100% fit.
             const [allPersonnel] = await db.query('SELECT * FROM personnel');
             return res.json({
-                perfectMatch: allPersonnel.map(p => ({ ...p, fitScore: 100, utilization: 0, gaps: [], training: [] })),
+                perfectMatch: allPersonnel.map(p => ({ ...p, fitScore: 100, utilization: 0, gaps: [], training: [], matched_skills: [] })),
                 nearMatch: []
             });
         }
