@@ -9,13 +9,28 @@ const Personnel = () => {
     const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
     const [selectedPerson, setSelectedPerson] = useState(null);
 
-    const [formData, setFormData] = useState({ name: '', email: '', role: '', experience_level: 'Junior' });
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        role: '',
+        experience_level: 'Junior',
+        initialSkills: [] // [{ skill_id, proficiency_level, skillName }]
+    });
     const [skillFormData, setSkillFormData] = useState({ skill_id: '', proficiency_level: '1' });
+    const [showRoleSuggestions, setShowRoleSuggestions] = useState(false);
+    const [newPersonnelSkill, setNewPersonnelSkill] = useState({ skill_id: '', proficiency_level: '1' });
 
     useEffect(() => {
         fetchPersonnel();
         fetchSkills();
     }, []);
+
+    // Get unique roles for auto-suggestion
+    const existingRoles = Array.from(new Set(personnel.map(p => p.role?.trim()).filter(Boolean)));
+    const filteredRoles = existingRoles.filter(r =>
+        r.toLowerCase().includes(formData.role.toLowerCase()) &&
+        r.toLowerCase() !== formData.role.toLowerCase()
+    );
 
     const fetchPersonnel = async () => {
         try {
@@ -47,20 +62,43 @@ const Personnel = () => {
         }
     };
 
+    const handleAddInitialSkill = () => {
+        if (!newPersonnelSkill.skill_id) return;
+        const skill = skills.find(s => s.id == newPersonnelSkill.skill_id);
+        setFormData({
+            ...formData,
+            initialSkills: [...formData.initialSkills, { ...newPersonnelSkill, skillName: skill?.name }]
+        });
+        setNewPersonnelSkill({ skill_id: '', proficiency_level: '1' });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            // 1. Create the person
             const res = await personnelApi.create(formData);
+            const newPersonId = res.data.id;
 
-            // Auto switch to adding skills
+            // 2. Assign initial skills if any
+            if (formData.initialSkills.length > 0) {
+                for (const s of formData.initialSkills) {
+                    await personnelApi.assignSkill(newPersonId, {
+                        skill_id: s.skill_id,
+                        proficiency_level: s.proficiency_level
+                    });
+                }
+            }
+
             setIsModalOpen(false);
-            setFormData({ name: '', email: '', role: '', experience_level: 'Junior' }); // Reset form
-            fetchPersonnel(); // Refresh list background
-
-            // Open skill modal for the new person
-            // The API returns the created object including ID
-            setSelectedPerson(res.data);
-            setIsSkillModalOpen(true);
+            setFormData({
+                name: '',
+                email: '',
+                role: '',
+                experience_level: 'Junior',
+                initialSkills: []
+            });
+            fetchPersonnel();
+            alert("Personnel added with skills!");
 
         } catch (err) {
             alert("Error: " + (err.response?.data?.message || err.message));
@@ -189,9 +227,37 @@ const Personnel = () => {
                                 <label className="form-label">Email</label>
                                 <input required type="email" className="form-input" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
                             </div>
-                            <div className="form-group">
+                            <div className="form-group relative">
                                 <label className="form-label">Role</label>
-                                <input className="form-input" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })} placeholder="e.g. Frontend Dev" />
+                                <input
+                                    className="form-input"
+                                    autoComplete="off"
+                                    value={formData.role}
+                                    onChange={e => {
+                                        setFormData({ ...formData, role: e.target.value });
+                                        setShowRoleSuggestions(true);
+                                    }}
+                                    onFocus={() => setShowRoleSuggestions(true)}
+                                    onBlur={() => setTimeout(() => setShowRoleSuggestions(false), 200)}
+                                    placeholder="e.g. Frontend Dev"
+                                />
+                                {showRoleSuggestions && filteredRoles.length > 0 && (
+                                    <div className="suggestions-dropdown border border-border">
+                                        {filteredRoles.map((r, i) => (
+                                            <div
+                                                key={i}
+                                                className="suggestion-item"
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    setFormData({ ...formData, role: r });
+                                                    setShowRoleSuggestions(false);
+                                                }}
+                                            >
+                                                {r}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                             <div className="form-group">
                                 <label className="form-label">Experience</label>
@@ -201,9 +267,53 @@ const Personnel = () => {
                                     <option value="Senior">Senior</option>
                                 </select>
                             </div>
+
+                            {/* Skills Section */}
+                            <div className="mt-4 border-t border-border pt-4">
+                                <label className="form-label mb-2">Assign Initial Skills</label>
+                                <div className="flex gap-2 mb-3">
+                                    <select
+                                        className="form-select flex-1"
+                                        style={{ minWidth: '0' }}
+                                        value={newPersonnelSkill.skill_id}
+                                        onChange={e => setNewPersonnelSkill({ ...newPersonnelSkill, skill_id: e.target.value })}
+                                    >
+                                        <option value="">Select Skill</option>
+                                        {skills.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                    </select>
+                                    <select
+                                        className="form-select w-20 text-center"
+                                        style={{ width: '80px', minWidth: '80px' }}
+                                        value={newPersonnelSkill.proficiency_level}
+                                        onChange={e => setNewPersonnelSkill({ ...newPersonnelSkill, proficiency_level: e.target.value })}
+                                    >
+                                        {[1, 2, 3, 4, 5].map(l => <option key={l} value={l}>Lv{l}</option>)}
+                                    </select>
+                                    <button type="button" onClick={handleAddInitialSkill} className="btn btn-secondary px-3">Add</button>
+                                </div>
+
+                                <div className="flex flex-wrap gap-2">
+                                    {formData.initialSkills.map((s, i) => (
+                                        <div key={i} className="badge badge-blue flex items-center gap-1">
+                                            {s.skillName} (Lvl {s.proficiency_level})
+                                            <button
+                                                type="button"
+                                                className="hover:text-red-500"
+                                                onClick={() => setFormData({
+                                                    ...formData,
+                                                    initialSkills: formData.initialSkills.filter((_, idx) => idx !== i)
+                                                })}
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
                             <div className="flex justify-end gap-2 mt-6">
                                 <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-secondary">Cancel</button>
-                                <button type="submit" className="btn btn-primary">Create</button>
+                                <button type="submit" className="btn btn-primary">Create Personnel</button>
                             </div>
                         </form>
                     </div>
