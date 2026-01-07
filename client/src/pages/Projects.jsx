@@ -25,6 +25,7 @@ const Projects = () => {
     const [isMatchModalOpen, setIsMatchModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('perfect'); // 'perfect' or 'near'
     const [expandedMatchingRows, setExpandedMatchingRows] = useState({});
+    const [activeProjectTab, setActiveProjectTab] = useState('active'); // 'active' or 'completed'
 
     const toggleMatchingSkills = (id) => {
         setExpandedMatchingRows(prev => ({ ...prev, [id]: !prev[id] }));
@@ -66,6 +67,17 @@ const Projects = () => {
             fetchProjects();
             setFormData({ name: '', description: '', start_date: '', end_date: '', status: 'Planning', requirements: [] });
         } catch (err) { alert(err.message); }
+    };
+
+    const handleStatusChange = async (projectId, newStatus) => {
+        const project = projects.find(p => p.id === projectId);
+        if (!project) return;
+        try {
+            await projectsApi.update(projectId, { ...project, status: newStatus });
+            fetchProjects();
+        } catch (err) {
+            alert("Error updating status: " + err.message);
+        }
     };
 
     const handleFindMatch = async (project) => {
@@ -115,28 +127,107 @@ const Projects = () => {
                 <MagicBento items={projectBentoItems} spotlightRadius={200} textAutoHide={false} />
             </div>
 
-            <div className="grid-cols-2">
-                {projects.map(p => (
-                    <div key={p.id} className="card">
-                        <div className="flex justify-between mb-2">
-                            <span className={`badge ${p.status === 'Active' ? 'badge-green' : p.status === 'Completed' ? 'badge-gray' : 'badge-yellow'}`}>
-                                {p.status}
-                            </span>
-                            <div className="text-xs text-text-muted">{new Date(p.created_at).toLocaleDateString()}</div>
-                        </div>
-                        <h3 className="text-xl font-bold mb-2">{p.name}</h3>
-                        <p className="text-text-muted mb-4">{p.description}</p>
-
-                        <div className="flex justify-between items-center border-t border-border pt-4 mt-2">
-                            <div className="text-sm">
-                                <strong>Timeline:</strong><br />
-                                {p.start_date ? new Date(p.start_date).toLocaleDateString() : 'TBD'} - {p.end_date ? new Date(p.end_date).toLocaleDateString() : 'TBD'}
-                            </div>
-                            <button onClick={() => handleFindMatch(p)} className="btn btn-primary text-sm">Find Match</button>
-                        </div>
-                    </div>
-                ))}
+            {/* Tab Navigation */}
+            <div className="flex border-b border-border mb-8 overflow-x-auto">
+                <button
+                    className={`px-6 py-3 font-bold text-sm transition-all border-b-2 whitespace-nowrap ${activeProjectTab === 'active'
+                            ? 'text-primary border-primary bg-primary/5'
+                            : 'text-text-muted border-transparent hover:text-text-main hover:bg-gray-50'
+                        }`}
+                    onClick={() => setActiveProjectTab('active')}
+                >
+                    Planning & In Progress ({projects.filter(p => p.status !== 'Completed').length})
+                </button>
+                <button
+                    className={`px-6 py-3 font-bold text-sm transition-all border-b-2 whitespace-nowrap ${activeProjectTab === 'completed'
+                            ? 'text-primary border-primary bg-primary/5'
+                            : 'text-text-muted border-transparent hover:text-text-main hover:bg-gray-50'
+                        }`}
+                    onClick={() => setActiveProjectTab('completed')}
+                >
+                    Completed Projects ({projects.filter(p => p.status === 'Completed').length})
+                </button>
             </div>
+
+            {/* Active & Planning Projects Tab */}
+            {activeProjectTab === 'active' && (
+                <div className="animate-fade-in">
+                    <div className="grid-cols-2">
+                        {projects.filter(p => p.status !== 'Completed').map(p => (
+                            <div key={p.id} className="card">
+                                <div className="flex justify-between mb-2">
+                                    <select
+                                        className={`text-xs font-bold px-2 py-1 rounded border-none cursor-pointer outline-none ${p.status === 'Active' ? 'bg-green-100 text-green-700' :
+                                            'bg-yellow-100 text-yellow-700'
+                                            }`}
+                                        value={p.status}
+                                        onChange={(e) => handleStatusChange(p.id, e.target.value)}
+                                    >
+                                        <option value="Planning">Planning</option>
+                                        <option value="Active">Active</option>
+                                        <option value="Completed">Completed</option>
+                                    </select>
+                                    <div className="text-xs text-text-muted">{new Date(p.created_at).toLocaleDateString()}</div>
+                                </div>
+                                <h3 className="text-xl font-bold mb-2">{p.name}</h3>
+                                <p className="text-text-muted mb-4">{p.description}</p>
+
+                                <div className="flex justify-between items-center border-t border-border pt-4 mt-2">
+                                    <div className="text-sm">
+                                        <strong>Timeline:</strong><br />
+                                        {p.start_date ? new Date(p.start_date).toLocaleDateString() : 'TBD'} - {p.end_date ? new Date(p.end_date).toLocaleDateString() : 'TBD'}
+                                    </div>
+                                    <button onClick={() => handleFindMatch(p)} className="btn btn-primary text-sm">Find Match</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    {projects.filter(p => p.status !== 'Completed').length === 0 && (
+                        <div className="py-20 text-center bg-surface border-2 border-dashed border-border rounded-xl text-text-muted">
+                            No active projects. Start by creating a new one!
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Completed Projects Tab */}
+            {activeProjectTab === 'completed' && (
+                <div className="animate-fade-in">
+                    <div className="grid-cols-2 opacity-90 transition-all">
+                        {projects.filter(p => p.status === 'Completed').map(p => (
+                            <div key={p.id} className="card">
+                                <div className="flex justify-between mb-2">
+                                    <select
+                                        className="text-xs font-bold px-2 py-1 rounded border-none cursor-pointer outline-none bg-gray-100 text-gray-700"
+                                        value={p.status}
+                                        onChange={(e) => handleStatusChange(p.id, e.target.value)}
+                                    >
+                                        <option value="Planning">Planning</option>
+                                        <option value="Active">Active</option>
+                                        <option value="Completed">Completed</option>
+                                    </select>
+                                    <div className="text-xs text-text-muted">{new Date(p.created_at).toLocaleDateString()}</div>
+                                </div>
+                                <h3 className="text-xl font-bold mb-2 text-text-muted">{p.name}</h3>
+                                <p className="text-text-muted mb-4 text-sm">{p.description}</p>
+
+                                <div className="flex justify-between items-center border-t border-border pt-4 mt-2">
+                                    <div className="text-sm text-text-muted">
+                                        <strong>Project Finalized</strong><br />
+                                        Completed on {p.end_date ? new Date(p.end_date).toLocaleDateString() : 'recent date'}
+                                    </div>
+                                    <button onClick={() => handleFindMatch(p)} className="btn btn-secondary text-sm">Review Matches</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    {projects.filter(p => p.status === 'Completed').length === 0 && (
+                        <div className="py-20 text-center text-text-muted italic border-2 border-dashed border-border rounded-xl">
+                            Projects you complete will appear here.
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Create Project Modal */}
             {isModalOpen && (
@@ -154,7 +245,6 @@ const Projects = () => {
                                     <select className="form-select" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
                                         <option>Planning</option>
                                         <option>Active</option>
-                                        <option>Completed</option>
                                     </select>
                                 </div>
                             </div>

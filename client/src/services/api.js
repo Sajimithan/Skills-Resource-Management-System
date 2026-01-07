@@ -24,6 +24,7 @@ export const projectsApi = {
     getAll: () => api.get('/projects'),
     getById: (id) => api.get(`/projects/${id}`),
     create: (data) => api.post('/projects', data),
+    update: (id, data) => api.put(`/projects/${id}`, data),
     addRequirement: (id, data) => api.post(`/projects/${id}/requirements`, data),
     assignPersonnel: (id, data) => api.post(`/projects/${id}/assign`, data),
 };

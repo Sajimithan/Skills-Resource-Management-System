@@ -121,4 +121,18 @@ router.post('/:id/assign', async (req, res) => {
     }
 });
 
+// Update project
+router.put('/:id', async (req, res) => {
+    const { name, description, start_date, end_date, status } = req.body;
+    try {
+        await db.query(
+            'UPDATE projects SET name = ?, description = ?, start_date = ?, end_date = ?, status = ? WHERE id = ?',
+            [name, description, start_date, end_date, status, req.params.id]
+        );
+        res.json({ message: 'Project updated successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;
