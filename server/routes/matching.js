@@ -32,6 +32,15 @@ router.get('/:projectId', async (req, res) => {
         // Get Basic Info
         const [personnel] = await db.query('SELECT * FROM personnel');
 
+        // Get already assigned personnel for THIS project
+        const [alreadyAssigned] = await db.query(`
+            SELECT personnel_id 
+            FROM project_assignments 
+            WHERE project_id = ?
+        `, [projectId]);
+
+        const assignedIds = new Set(alreadyAssigned.map(a => a.personnel_id));
+
         // Get Skills Map
         const [personnelSkills] = await db.query(`
             SELECT ps.personnel_id, ps.skill_id, ps.proficiency_level, s.name as skill_name
@@ -52,60 +61,62 @@ router.get('/:projectId', async (req, res) => {
         const utilizationMap = {};
         assignments.forEach(a => utilizationMap[a.personnel_id] = a.active_count);
 
-        // 3. Process Matching Logic
-        const processedCandidates = personnel.map(person => {
-            const pSkills = personnelSkills.filter(ps => ps.personnel_id === person.id);
-            const activeProjects = utilizationMap[person.id] || 0;
+        // 3. Process Matching Logic - Filter out already assigned
+        const processedCandidates = personnel
+            .filter(person => !assignedIds.has(person.id))
+            .map(person => {
+                const pSkills = personnelSkills.filter(ps => ps.personnel_id === person.id);
+                const activeProjects = utilizationMap[person.id] || 0;
 
-            // Utilization Score (Heuristic: 1 project = 33%, 3 = 100%)
-            const utilizationPct = Math.min(activeProjects * 33, 100);
+                // Utilization Score (Heuristic: 1 project = 33%, 3 = 100%)
+                const utilizationPct = Math.min(activeProjects * 33, 100);
 
-            let matchScore = 0;
-            let totalMaxScore = requirements.length * 5; // Max 5 points per skill
-            let currentScore = 0;
-            let gaps = [];
-            let training = [];
-            let matched_skills = [];
+                let matchScore = 0;
+                let totalMaxScore = requirements.length * 5; // Max 5 points per skill
+                let currentScore = 0;
+                let gaps = [];
+                let training = [];
+                let matched_skills = [];
 
-            requirements.forEach(req => {
-                const pSkill = pSkills.find(ps => ps.skill_id === req.skill_id);
+                requirements.forEach(req => {
+                    const pSkill = pSkills.find(ps => ps.skill_id === req.skill_id);
 
-                if (pSkill) {
-                    // Has skill
-                    if (pSkill.proficiency_level >= req.min_proficiency_level) {
-                        // Full Match for this skill
-                        currentScore += 5; // Max points
-                        matched_skills.push({ ...pSkill, matchType: 'perfect' });
+                    if (pSkill) {
+                        // Has skill
+                        if (pSkill.proficiency_level >= req.min_proficiency_level) {
+                            // Full Match for this skill
+                            currentScore += 5; // Max points
+                            matched_skills.push({ ...pSkill, matchType: 'perfect' });
+                        } else {
+                            // Proficiency Gap
+                            // Points based on how close they are
+                            const diff = req.min_proficiency_level - pSkill.proficiency_level;
+                            currentScore += Math.max(0, 5 - (diff * 2)); // Penalty
+
+                            gaps.push({ skill: req.skill_name, type: 'proficiency', current: pSkill.proficiency_level, required: req.min_proficiency_level });
+                            training.push(`Upskill ${req.skill_name}: Level ${pSkill.proficiency_level} -> ${req.min_proficiency_level}`);
+                            matched_skills.push({ ...pSkill, matchType: 'gap' });
+                        }
                     } else {
-                        // Proficiency Gap
-                        // Points based on how close they are
-                        const diff = req.min_proficiency_level - pSkill.proficiency_level;
-                        currentScore += Math.max(0, 5 - (diff * 2)); // Penalty
-
-                        gaps.push({ skill: req.skill_name, type: 'proficiency', current: pSkill.proficiency_level, required: req.min_proficiency_level });
-                        training.push(`Upskill ${req.skill_name}: Level ${pSkill.proficiency_level} -> ${req.min_proficiency_level}`);
-                        matched_skills.push({ ...pSkill, matchType: 'gap' });
+                        // Missing skill
+                        gaps.push({ skill: req.skill_name, type: 'missing', required: req.min_proficiency_level });
+                        training.push(`Course: ${req.skill_name} Fundamentals`);
                     }
-                } else {
-                    // Missing skill
-                    gaps.push({ skill: req.skill_name, type: 'missing', required: req.min_proficiency_level });
-                    training.push(`Course: ${req.skill_name} Fundamentals`);
-                }
+                });
+
+                // Calculate Fit Score
+                const fitScore = Math.round((currentScore / totalMaxScore) * 100);
+
+                return {
+                    ...person,
+                    fitScore,
+                    utilizationPct,
+                    active_projects_count: activeProjects,
+                    gaps,
+                    training,
+                    matched_skills
+                };
             });
-
-            // Calculate Fit Score
-            const fitScore = Math.round((currentScore / totalMaxScore) * 100);
-
-            return {
-                ...person,
-                fitScore,
-                utilizationPct,
-                active_projects_count: activeProjects,
-                gaps,
-                training,
-                matched_skills
-            };
-        });
 
         // 4. Categorize
         const perfectMatch = processedCandidates.filter(c => c.gaps.length === 0 && c.fitScore >= 80).sort((a, b) => b.fitScore - a.fitScore);
