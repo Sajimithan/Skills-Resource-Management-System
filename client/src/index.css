@@ -23,6 +23,23 @@
 
   --radius: 16px;
   --font-sans: 'Poppins', 'Inter', system-ui, sans-serif;
+
+  /* Badge Colors (Dark Default) */
+  --badge-blue-bg: rgba(30, 64, 175, 0.2);
+  --badge-blue-text: #60A5FA;
+  --badge-blue-border: rgba(30, 64, 175, 0.3);
+
+  --badge-green-bg: rgba(6, 95, 70, 0.2);
+  --badge-green-text: #34D399;
+  --badge-green-border: rgba(6, 95, 70, 0.3);
+
+  --badge-yellow-bg: rgba(146, 64, 14, 0.2);
+  --badge-yellow-text: #FBBF24;
+  --badge-yellow-border: rgba(146, 64, 14, 0.3);
+
+  --badge-gray-bg: rgba(71, 85, 105, 0.2);
+  --badge-gray-text: #CBD5E1;
+  --badge-gray-border: rgba(71, 85, 105, 0.3);
 }
 
 [data-theme="light"] {
@@ -43,6 +60,23 @@
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+  /* Badge Colors (Light Mode) */
+  --badge-blue-bg: rgba(59, 130, 246, 0.1);
+  --badge-blue-text: #1e40af;
+  --badge-blue-border: rgba(59, 130, 246, 0.2);
+
+  --badge-green-bg: rgba(16, 185, 129, 0.1);
+  --badge-green-text: #065f46;
+  --badge-green-border: rgba(16, 185, 129, 0.2);
+
+  --badge-yellow-bg: rgba(245, 158, 11, 0.1);
+  --badge-yellow-text: #92400e;
+  --badge-yellow-border: rgba(245, 158, 11, 0.2);
+
+  --badge-gray-bg: rgba(100, 116, 139, 0.1);
+  --badge-gray-text: #1e293b;
+  --badge-gray-border: rgba(100, 116, 139, 0.2);
 }
 
 body {
@@ -181,27 +215,27 @@ textarea {
 }
 
 .badge-blue {
-  background: rgba(30, 64, 175, 0.2);
-  color: #60A5FA;
-  border: 1px solid rgba(30, 64, 175, 0.3);
+  background: var(--badge-blue-bg);
+  color: var(--badge-blue-text);
+  border: 1px solid var(--badge-blue-border);
 }
 
 .badge-green {
-  background: rgba(6, 95, 70, 0.2);
-  color: #34D399;
-  border: 1px solid rgba(6, 95, 70, 0.3);
+  background: var(--badge-green-bg);
+  color: var(--badge-green-text);
+  border: 1px solid var(--badge-green-border);
 }
 
 .badge-yellow {
-  background: rgba(146, 64, 14, 0.2);
-  color: #FBBF24;
-  border: 1px solid rgba(146, 64, 14, 0.3);
+  background: var(--badge-yellow-bg);
+  color: var(--badge-yellow-text);
+  border: 1px solid var(--badge-yellow-border);
 }
 
 .badge-gray {
-  background: rgba(71, 85, 105, 0.2);
-  color: #CBD5E1;
-  border: 1px solid rgba(71, 85, 105, 0.3);
+  background: var(--badge-gray-bg);
+  color: var(--badge-gray-text);
+  border: 1px solid var(--badge-gray-border);
 }
 
 .table {

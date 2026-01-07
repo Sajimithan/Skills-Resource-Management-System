@@ -13,7 +13,7 @@
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
     min-height: 180px;
     cursor: pointer;
     border: 1px solid var(--border);

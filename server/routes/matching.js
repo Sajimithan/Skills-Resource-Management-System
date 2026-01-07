@@ -3,11 +3,19 @@ const router = express.Router();
 const db = require('../config/db');
 
 // Advanced Matching Algorithm
+// This route calculates a multi-dimensional "Match Score" for personnel against a project.
+// Drivers are:
+// 1. Skill Fit (50-60%): Do they have the required skills at the right level?
+// 2. Availability (30-40%): Do they have overlapping projects during the target timeframe?
+// 3. Performance (20%): How have they been rated on these specific skills in the past?
 router.get('/:projectId', async (req, res) => {
     const projectId = req.params.projectId;
 
     try {
-        // 1. Fetch Project Details & Requirements
+        // ------------------------------------------------------------------
+        // 1. Data Gathering Phase
+        // Fetch project details, requirements, all personnel, and assignments
+        // ------------------------------------------------------------------
         const [projectRows] = await db.query('SELECT * FROM projects WHERE id = ?', [projectId]);
         if (projectRows.length === 0) return res.status(404).json({ error: 'Project not found' });
         const project = projectRows[0];
@@ -20,7 +28,7 @@ router.get('/:projectId', async (req, res) => {
         `, [projectId]);
 
         if (requirements.length === 0) {
-            // No requirements, everyone is a candidate
+            // Edge Case: Project has no requirements defined yet. Return everyone as a 100% fit.
             const [allPersonnel] = await db.query('SELECT * FROM personnel');
             return res.json({
                 perfectMatch: allPersonnel.map(p => ({ ...p, fitScore: 100, utilization: 0, gaps: [], training: [] })),
@@ -28,27 +36,24 @@ router.get('/:projectId', async (req, res) => {
             });
         }
 
-        // 2. Fetch All Personnel with their Skills & Utilization
-        // Get Basic Info
         const [personnel] = await db.query('SELECT * FROM personnel');
 
-        // Get already assigned personnel for THIS project
+        // Identify who is already assigned to avoid duplicate recommendations
         const [alreadyAssigned] = await db.query(`
             SELECT personnel_id 
             FROM project_assignments 
             WHERE project_id = ?
         `, [projectId]);
-
         const assignedIds = new Set(alreadyAssigned.map(a => a.personnel_id));
 
-        // Get Skills Map
+        // Maps for fast lookups
         const [personnelSkills] = await db.query(`
             SELECT ps.personnel_id, ps.skill_id, ps.proficiency_level, s.name as skill_name
             FROM personnel_skills ps
             JOIN skills s ON ps.skill_id = s.id
         `);
 
-        // Get Ratings Map
+        // Load historical performance data
         const [ratings] = await db.query('SELECT personnel_id, skill_id, rating FROM project_skill_ratings');
         const ratingsMap = {};
         ratings.forEach(r => {
@@ -57,7 +62,7 @@ router.get('/:projectId', async (req, res) => {
             ratingsMap[r.personnel_id][r.skill_id].push(r.rating);
         });
 
-        // Get Utilization & Detailed Assignments (to check date overlaps)
+        // Load existing assignments for date overlap calculation
         const [allAssignments] = await db.query(`
             SELECT pa.personnel_id, p.start_date, p.end_date, p.name as project_name, p.status
             FROM project_assignments pa
@@ -71,7 +76,10 @@ router.get('/:projectId', async (req, res) => {
             pAssignmentsMap[a.personnel_id].push(a);
         });
 
-        // 3. Process Matching Logic - Filter out already assigned
+        // ------------------------------------------------------------------
+        // 2. Scoring Logic Phase
+        // Iterate through every candidate and calculate metrics
+        // ------------------------------------------------------------------
         const processedCandidates = personnel
             .filter(person => !assignedIds.has(person.id))
             .map(person => {
@@ -79,17 +87,18 @@ router.get('/:projectId', async (req, res) => {
                 const pAsgns = pAssignmentsMap[person.id] || [];
                 const activeProjects = pAsgns.length;
 
-                // Date Overlap Detection & Weighted Utilization Calculation
+                // --- Metric A: Time-Weighted Utilization ---
+                // Calculates percentage of time blocked by other concurrent projects.
                 const targetStart = project.start_date ? new Date(project.start_date) : null;
                 const targetEnd = project.end_date ? new Date(project.end_date) : null;
 
                 let utilizationPct = 0;
-                let activeProjectsCount = 0; // For pure count display
+                let activeProjectsCount = 0;
 
-                // Constraints
-                const WEEKLY_CAPACITY_HOURS = 45; // 9hrs * 5 days
-                const ESTIMATED_PROJECT_LOAD_HOURS = 15; // Assume 15hrs/week per project
-                const LOAD_RATIO = ESTIMATED_PROJECT_LOAD_HOURS / WEEKLY_CAPACITY_HOURS; // 0.333...
+                // Constants for Load heuristics (e.g., 1 project = 33% load)
+                const WEEKLY_CAPACITY_HOURS = 45;
+                const ESTIMATED_PROJECT_LOAD_HOURS = 15;
+                const LOAD_RATIO = ESTIMATED_PROJECT_LOAD_HOURS / WEEKLY_CAPACITY_HOURS;
 
                 if (targetStart && targetEnd) {
                     const targetDurationTime = targetEnd.getTime() - targetStart.getTime();
@@ -103,49 +112,41 @@ router.get('/:projectId', async (req, res) => {
                             const asgnEnd = asgn.end_date ? new Date(asgn.end_date) : null;
 
                             if (asgnStart && asgnEnd) {
-                                // Check overlap
+                                // Calculate exact overlap window
                                 const overlapStart = asgnStart > targetStart ? asgnStart : targetStart;
                                 const overlapEnd = asgnEnd < targetEnd ? asgnEnd : targetEnd;
 
                                 if (overlapStart < overlapEnd) {
-                                    // There is an overlap
                                     const overlapTime = overlapEnd.getTime() - overlapStart.getTime();
                                     const overlapDays = overlapTime / (1000 * 3600 * 24);
 
-                                    // Calculate how much of the target project's life is affected by this overlap
-                                    // ex: Project is 12 weeks. Overlap is 3 weeks. Ratio is 0.25.
+                                    // Weighted contribution to total load
                                     const overlapRatio = overlapDays / targetDurationDays;
-
-                                    // Add to total load
-                                    // Contribution = (Portion of Time) * (Load Intensity)
                                     totalWeightedLoad += (overlapRatio * LOAD_RATIO);
-
-                                    activeProjectsCount++; // Count this as an active/conflicting project
+                                    activeProjectsCount++;
                                 }
                             }
                         });
-
-                        // Convert to Percentage (0.33 -> 33%)
                         utilizationPct = Math.min(Math.round(totalWeightedLoad * 100), 100);
                     }
                 } else {
-                    // Fallback if no dates set: Use simple count heuristic
+                    // Fallback: Simple count heuristic if dates are missing
                     activeProjectsCount = pAsgns.length;
                     utilizationPct = Math.min(activeProjectsCount * 33, 100);
                 }
 
-                let matchScore = 0;
+                // --- Metric B: Skill Fit Score ---
+                // Evaluation of skill possession and proficiency levels.
                 let totalMaxScore = requirements.length * 5; // Max 5 points per skill
                 let currentScore = 0;
                 let gaps = [];
                 let training = [];
                 let matched_skills = [];
 
-                // Performance Score Vars
                 let totalRatingPoints = 0;
                 let ratedSkillsCount = 0;
 
-                // General historic ratings (fallback)
+                // Collect historic ratings for generic performance fallback
                 let allHistoricRatings = [];
                 if (ratingsMap[person.id]) {
                     Object.values(ratingsMap[person.id]).forEach(skillRatings => {
@@ -156,65 +157,59 @@ router.get('/:projectId', async (req, res) => {
                 requirements.forEach(req => {
                     const pSkill = pSkills.find(ps => ps.skill_id === req.skill_id);
 
-                    // Get average rating for this skill
+                    // Get specific performance history for THIS skill
                     let avgRating = 0;
-                    let ratingCount = 0;
                     if (ratingsMap[person.id] && ratingsMap[person.id][req.skill_id]) {
                         const scores = ratingsMap[person.id][req.skill_id];
                         avgRating = scores.reduce((a, b) => a + b, 0) / scores.length;
-                        ratingCount = scores.length;
 
                         totalRatingPoints += avgRating;
                         ratedSkillsCount++;
                     }
 
                     if (pSkill) {
-                        // Has skill
                         if (pSkill.proficiency_level >= req.min_proficiency_level) {
-                            // Full Match for this skill
-                            currentScore += 5; // Max points
+                            // Perfect Match: +5 points
+                            currentScore += 5;
                             matched_skills.push({ ...pSkill, matchType: 'perfect', avgRating: avgRating || null });
                         } else {
-                            // Proficiency Gap
-                            // Points based on how close they are
+                            // Proficiency Gap: Penalize score based on diff
                             const diff = req.min_proficiency_level - pSkill.proficiency_level;
-                            currentScore += Math.max(0, 5 - (diff * 2)); // Penalty
+                            currentScore += Math.max(0, 5 - (diff * 2));
 
                             gaps.push({ skill: req.skill_name, type: 'proficiency', current: pSkill.proficiency_level, required: req.min_proficiency_level });
                             training.push(`Upskill ${req.skill_name}: Level ${pSkill.proficiency_level} -> ${req.min_proficiency_level}`);
                             matched_skills.push({ ...pSkill, matchType: 'gap', avgRating: avgRating || null });
                         }
                     } else {
-                        // Missing skill
+                        // Missing Skill: 0 points
                         gaps.push({ skill: req.skill_name, type: 'missing', required: req.min_proficiency_level });
                         training.push(`Course: ${req.skill_name} Fundamentals`);
                     }
                 });
 
-                // Calculate Fit Score (Skill Proficiency Match)
                 const fitScore = Math.round((currentScore / totalMaxScore) * 100);
 
-                // Calculate Performance Score (Based on ratings 1-5)
+                // --- Metric C: Performance Score ---
+                // Based on proven track record (manager ratings)
                 let performanceScore = null;
                 if (ratedSkillsCount > 0) {
-                    // Weighted average for the skills needed
                     const avgAcrossRequired = totalRatingPoints / ratedSkillsCount;
-                    performanceScore = Math.round((avgAcrossRequired / 5) * 100);
+                    performanceScore = Math.round((avgAcrossRequired / 5) * 100); // 5-star scale
                 } else if (allHistoricRatings.length > 0) {
-                    // Fallback to general performance across other skills
                     const generalAvg = allHistoricRatings.reduce((a, b) => a + b, 0) / allHistoricRatings.length;
                     performanceScore = Math.round((generalAvg / 5) * 100);
                 }
 
-                // Weighted Overall Match
+                // --- Final Calculation: Overall Efficiency ---
                 const availabilityScore = 100 - utilizationPct;
                 let overallMatch = 0;
 
                 if (performanceScore !== null) {
-                    // If we have history (specific or general)
+                    // With History: Fit (50%) + Avail (30%) + Perf (20%)
                     overallMatch = Math.round((fitScore * 0.5) + (availabilityScore * 0.3) + (performanceScore * 0.2));
                 } else {
-                    // No history at all
+                    // Without History: Fit (60%) + Avail (40%)
                     overallMatch = Math.round((fitScore * 0.6) + (availabilityScore * 0.4));
                 }
 
@@ -231,7 +226,10 @@ router.get('/:projectId', async (req, res) => {
                 };
             });
 
-        // 4. Categorize - Sort by Fit Score (Skill Match) now, as requested
+        // ------------------------------------------------------------------
+        // 3. Categorization Phase
+        // Sort and group candidates based on Fit Score thresholds
+        // ------------------------------------------------------------------
         const perfectMatchList = processedCandidates
             .filter(c => c.fitScore >= 80)
             .sort((a, b) => b.fitScore - a.fitScore);

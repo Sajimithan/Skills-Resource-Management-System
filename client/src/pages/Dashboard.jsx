@@ -23,7 +23,6 @@ const Dashboard = () => {
     const fetchStats = async () => {
         try {
             const res = await dashboardApi.getStats();
-            console.log("Dashboard Stats:", res.data);
             setStats(res.data);
         } catch (err) {
             console.error("Dashboard Fetch Error:", err);
@@ -51,7 +50,7 @@ const Dashboard = () => {
                     </div>
                     <div>
                         <div className="text-text-muted text-xs font-bold uppercase tracking-wider mb-1">Top Performer</div>
-                        <div className="text-2xl font-extrabold text-blue-100">{stats.utilization[0]?.name || 'N/A'}</div>
+                        <div className="text-2xl font-extrabold text-blue-100">{stats.topPerformer || 'N/A'}</div>
                     </div>
                 </div>
                 <div className="card flex items-center gap-5 border-l-4 border-l-green-500 shadow-lg transform hover:scale-[1.02] transition-transform">
@@ -220,14 +219,13 @@ const Dashboard = () => {
                                 </div>
                                 <div className="flex-1 flex gap-1 h-8">
                                     {stats.skillDemand.map(skill => {
-                                        // Random intensity for demo if no real matrix data yet, 
-                                        // or could be mapped from a matrix endpoint
-                                        const intensity = Math.floor(Math.random() * 6); // 0-5
-                                        const opacities = [0.05, 0.2, 0.4, 0.6, 0.8, 1];
+                                        // Use real proficiency level from personnel data
+                                        const intensity = person.skills[skill.id] || 0;
+                                        const opacities = [0.05, 0.3, 0.45, 0.65, 0.85, 1];
                                         return (
                                             <div
-                                                key={`${person.name}-${skill.name}`}
-                                                className="flex-1 rounded-sm transition-all duration-300 hover:scale-110 hover:z-10"
+                                                key={`${person.id}-${skill.id}`}
+                                                className="flex-1 rounded-sm transition-all duration-300 hover:scale-110 hover:z-10 shadow-sm"
                                                 style={{
                                                     backgroundColor: intensity > 0 ? `rgba(245, 158, 11, ${opacities[intensity]})` : 'rgba(255,255,255,0.03)',
                                                     border: intensity > 3 ? '1px solid rgba(255,255,255,0.2)' : 'none'

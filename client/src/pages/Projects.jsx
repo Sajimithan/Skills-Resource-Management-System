@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { projectsApi, skillsApi, matchingApi } from '../services/api';
 import { Plus, CheckCircle, Clock, X, Trash } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import MagicBento from '../components/MagicBento';
 import PillNav from '../components/PillNav';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -276,10 +275,10 @@ const Projects = () => {
                         }
                     ]}
                     activeHref={activeProjectTab === 'active' ? '#active' : activeProjectTab === 'timeline' ? '#timeline' : '#completed'}
-                    baseColor="#8D153A"  /* Maroon container */
-                    pillColor="#1a1a4a"  /* Sapphire pills */
-                    pillTextColor="#94A3B8" /* Muted text */
-                    hoveredPillTextColor="#ffffff" /* Bright on hover */
+                    baseColor="#ffffff"  /* White container and active state */
+                    pillColor="#1a1a4a"  /* Sapphire/Violet pills (kept same) */
+                    pillTextColor="#ffffff" /* White text on violet pills */
+                    hoveredPillTextColor="#1a1a4a" /* Violet text on white active/hover state */
                     initialLoadAnimation={true}
                 />
             </div>
@@ -316,11 +315,11 @@ const Projects = () => {
                                         {p.start_date ? new Date(p.start_date).toLocaleDateString() : 'TBD'} - {p.end_date ? new Date(p.end_date).toLocaleDateString() : 'TBD'}
                                     </div>
                                     <div className="flex gap-2">
-                                        <button onClick={() => handleDeleteProject(p.id)} className="btn btn-icon text-muted hover:text-red-500">
-                                            <Trash size={16} />
+                                        <button onClick={() => handleDeleteProject(p.id)} className="btn btn-icon text-muted hover:text-red-500 p-1.5">
+                                            <Trash size={14} />
                                         </button>
-                                        <button onClick={() => handleViewTeam(p)} className="btn btn-secondary text-sm rounded-full px-6">View Team</button>
-                                        <button onClick={() => handleFindMatch(p)} className="btn btn-primary text-sm rounded-full px-6">Find Match</button>
+                                        <button onClick={() => handleViewTeam(p)} className="btn btn-secondary text-xs rounded-full px-4 py-1.5">View Team</button>
+                                        <button onClick={() => handleFindMatch(p)} className="btn btn-primary text-xs rounded-full px-4 py-1.5">Find Match</button>
                                     </div>
                                 </div>
                             </div>
@@ -481,14 +480,14 @@ const Projects = () => {
                                 <div className="flex justify-between items-center border-t border-border pt-4 mt-2 gap-3">
                                     <div className="text-sm text-text-muted">
                                         <strong>Project Finalized</strong><br />
-                                        Completed on {p.end_date ? new Date(p.end_date).toLocaleDateString() : 'recent date'}
+                                        Completed on {p.end_date ? new Date(p.end_date).toLocaleDateString() : 'recent project cycle'}
                                     </div>
                                     <div className="flex gap-2">
-                                        <button onClick={() => handleDeleteProject(p.id)} className="btn btn-icon text-muted hover:text-red-500">
-                                            <Trash size={16} />
+                                        <button onClick={() => handleDeleteProject(p.id)} className="btn btn-icon text-muted hover:text-red-500 p-1.5">
+                                            <Trash size={14} />
                                         </button>
-                                        <button onClick={() => handleViewTeam(p)} className="btn btn-secondary text-sm rounded-full px-6">View Team</button>
-                                        <button onClick={() => handleFindMatch(p)} className="btn btn-secondary text-sm rounded-full px-6">Review Matches</button>
+                                        <button onClick={() => handleViewTeam(p)} className="btn btn-secondary text-xs rounded-full px-4 py-1.5">View Team</button>
+                                        <button onClick={() => handleFindMatch(p)} className="btn btn-secondary text-xs rounded-full px-4 py-1.5">Review Matches</button>
                                     </div>
                                 </div>
                             </div>
