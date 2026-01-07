@@ -23,6 +23,14 @@ const Personnel = () => {
     const [showRoleSuggestions, setShowRoleSuggestions] = useState(false);
     const [newPersonnelSkill, setNewPersonnelSkill] = useState({ skill_id: '', proficiency_level: '1' });
 
+    // Filtering State
+    const [filters, setFilters] = useState({
+        search: '',
+        experience: 'All',
+        skillId: '',
+        minLvl: 1
+    });
+
     useEffect(() => {
         fetchPersonnel();
         fetchSkills();
@@ -139,6 +147,22 @@ const Personnel = () => {
         setIsSkillModalOpen(true);
     }
 
+    // Computed Filtered List
+    const filteredPersonnel = personnel.filter(p => {
+        const matchesSearch = !filters.search ||
+            (p.name?.toLowerCase().includes(filters.search.toLowerCase())) ||
+            (p.role?.toLowerCase().includes(filters.search.toLowerCase())) ||
+            (p.email?.toLowerCase().includes(filters.search.toLowerCase()));
+
+        const matchesExp = filters.experience === 'All' || p.experience_level === filters.experience;
+
+        const matchesSkill = !filters.skillId || (Array.isArray(p.skills) && p.skills.some(s =>
+            s.id == filters.skillId && (parseInt(s.level, 10) || 0) >= parseInt(filters.minLvl, 10)
+        ));
+
+        return matchesSearch && matchesExp && matchesSkill;
+    });
+
     return (
         <div className="animate-fade-in">
             <div className="flex justify-between items-center mb-6">
@@ -149,6 +173,69 @@ const Personnel = () => {
                 <button onClick={() => setIsModalOpen(true)} className="btn btn-primary">
                     <Plus size={16} /> Add Personnel
                 </button>
+            </div>
+
+            {/* Powerful Filters Section */}
+            <div className="card mb-6 border border-border/50 bg-surface/50 backdrop-blur-sm p-4">
+                <div className="flex flex-wrap gap-4 items-end">
+                    <div className="flex-1 min-w-[200px]">
+                        <label className="text-[10px] text-text-muted uppercase font-bold tracking-widest block mb-1.5 ml-1">Search Personnel</label>
+                        <input
+                            type="text"
+                            className="form-input w-full bg-background"
+                            placeholder="Find by name, role, or email..."
+                            value={filters.search}
+                            onChange={e => setFilters({ ...filters, search: e.target.value })}
+                        />
+                    </div>
+                    <div className="w-40">
+                        <label className="text-[10px] text-text-muted uppercase font-bold tracking-widest block mb-1.5 ml-1">Experience</label>
+                        <select
+                            className="form-select w-full bg-background"
+                            value={filters.experience}
+                            onChange={e => setFilters({ ...filters, experience: e.target.value })}
+                        >
+                            <option value="All">All Levels</option>
+                            <option value="Junior">Junior</option>
+                            <option value="Mid-Level">Mid-Level</option>
+                            <option value="Senior">Senior</option>
+                        </select>
+                    </div>
+                    <div className="flex-1 min-w-[200px]">
+                        <label className="text-[10px] text-text-muted uppercase font-bold tracking-widest block mb-1.5 ml-1">Skill Filter</label>
+                        <div className="flex gap-2">
+                            <select
+                                className="form-select flex-1 bg-background"
+                                value={filters.skillId}
+                                onChange={e => setFilters({ ...filters, skillId: e.target.value })}
+                            >
+                                <option value="">Any Skill</option>
+                                {skills.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                            </select>
+                            {filters.skillId && (
+                                <select
+                                    className="form-select w-24 bg-background"
+                                    value={filters.minLvl}
+                                    onChange={e => setFilters({ ...filters, minLvl: e.target.value })}
+                                >
+                                    <option value="1">Lv1+</option>
+                                    <option value="2">Lv2+</option>
+                                    <option value="3">Lv3+</option>
+                                    <option value="4">Lv4+</option>
+                                    <option value="5">Lv5</option>
+                                </select>
+                            )}
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setFilters({ search: '', experience: 'All', skillId: '', minLvl: 1 })}
+                            className="btn btn-secondary h-[42px] px-4 rounded-xl flex items-center gap-2"
+                        >
+                            Reset
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div className="card overflow-hidden">
@@ -165,7 +252,7 @@ const Personnel = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {personnel.map((p) => (
+                            {filteredPersonnel.map((p) => (
                                 <tr key={p.id}>
                                     <td className="font-medium">{p.name}</td>
                                     <td>{p.role}</td>
