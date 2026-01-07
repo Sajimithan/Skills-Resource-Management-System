@@ -147,28 +147,30 @@ const Dashboard = () => {
             {/* Skill Demand Table */}
             <div className="card mt-8">
                 <h2 className="text-lg font-semibold mb-4">Skill Demand Trends</h2>
-                <table className="table">
-                    <thead>
-                        <tr>
-                            <th>Skill Name</th>
-                            <th>Demand (Project Req.)</th>
-                            <th>Trend</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {stats.skillDemand.map((skill, i) => (
-                            <tr key={i}>
-                                <td>{skill.name}</td>
-                                <td>{skill.demand_count}</td>
-                                <td>
-                                    <div className="w-full bg-gray-200 rounded-full h-2.5 max-w-[100px]">
-                                        <div className="bg-primary h-2.5 rounded-full" style={{ width: `${(skill.demand_count / (stats.skillDemand[0]?.demand_count || 1)) * 100}%` }}></div>
-                                    </div>
-                                </td>
+                <div className="table-container">
+                    <table className="table">
+                        <thead>
+                            <tr>
+                                <th>Skill Name</th>
+                                <th>Demand (Project Req.)</th>
+                                <th>Trend</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {stats.skillDemand.map((skill, i) => (
+                                <tr key={i}>
+                                    <td>{skill.name}</td>
+                                    <td>{skill.demand_count}</td>
+                                    <td>
+                                        <div className="w-full bg-gray-200 rounded-full h-2.5 max-w-[100px]">
+                                            <div className="bg-primary h-2.5 rounded-full" style={{ width: `${(skill.demand_count / (stats.skillDemand[0]?.demand_count || 1)) * 100}%` }}></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
         </div >

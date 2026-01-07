@@ -3,11 +3,36 @@ const router = express.Router();
 const db = require('../config/db');
 
 // Get all personnel
+// Get all personnel with their skills
 router.get('/', async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT * FROM personnel');
-        res.json(rows);
+        // 1. Fetch all personnel
+        const [personnel] = await db.query('SELECT * FROM personnel');
+
+        // 2. Fetch all personnel skills
+        const [allSkills] = await db.query(`
+            SELECT ps.personnel_id, s.name, ps.proficiency_level
+            FROM personnel_skills ps
+            JOIN skills s ON ps.skill_id = s.id
+        `);
+
+        // 3. Map skills to personnel
+        const results = personnel.map(p => {
+            const rowSkills = allSkills
+                .filter(ps => ps.personnel_id == p.id) // Use loose equality for safety
+                .map(ps => ({
+                    name: ps.name,
+                    level: ps.proficiency_level
+                }));
+            return { ...p, skills: rowSkills };
+        });
+
+        console.log(`Mapped ${results.length} personnel with skills.`);
+        if (results.length > 0) console.log("Example record skills:", JSON.stringify(results[0].skills));
+
+        res.json(results);
     } catch (err) {
+        console.error("Fetch Personnel Error:", err);
         res.status(500).json({ error: err.message });
     }
 });

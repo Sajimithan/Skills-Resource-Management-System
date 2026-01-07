@@ -134,10 +134,11 @@ textarea {
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.125rem 0.5rem;
+  padding: 0.125rem 0.625rem;
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .badge-blue {
@@ -185,6 +186,12 @@ textarea {
   border-bottom: none;
 }
 
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .table tbody tr:hover {
   background-color: #F9FAFB;
 }
@@ -218,14 +225,23 @@ textarea {
 
 .grid-cols-2 {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
 }
 
 .grid-cols-3 {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+@media (max-width: 640px) {
+
+  .grid-cols-2,
+  .grid-cols-3 {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
 }
 
 .flex {
@@ -303,12 +319,51 @@ textarea {
   height: 100vh;
 }
 
+.h-auto {
+  height: auto;
+}
+
+.max-w-md {
+  max-width: 28rem;
+}
+
+.max-w-2xl {
+  max-width: 42rem;
+}
+
+.max-w-4xl {
+  max-width: 56rem;
+}
+
+.w-full {
+  width: 100%;
+}
+
 .h-full {
   height: 100%;
 }
 
 .fixed {
   position: fixed;
+}
+
+.inset-0 {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.z-50 {
+  z-index: 50;
+}
+
+.bg-black-50 {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .absolute {
@@ -478,4 +533,34 @@ textarea {
 
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Mobile Responsiveness Extra */
+@media (max-width: 768px) {
+  .p-6 {
+    padding: 1rem;
+  }
+
+  .p-8 {
+    padding: 1.5rem;
+  }
+
+  .text-2xl {
+    font-size: 1.25rem;
+  }
+
+  .max-w-2xl,
+  .max-w-4xl,
+  .max-w-md {
+    max-width: 95vw;
+    margin: 10px;
+  }
+
+  .flex {
+    flex-wrap: wrap;
+  }
+
+  .justify-between {
+    gap: 10px;
+  }
 }

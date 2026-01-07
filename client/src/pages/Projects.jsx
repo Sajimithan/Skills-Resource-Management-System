@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { projectsApi, skillsApi, matchingApi } from '../services/api';
-import { Plus, CheckCircle, Clock } from 'lucide-react';
+import { Plus, CheckCircle, Clock, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import MagicBento from '../components/MagicBento';
 
@@ -24,6 +24,11 @@ const Projects = () => {
     const [matchResults, setMatchResults] = useState({ perfectMatch: [], nearMatch: [] });
     const [isMatchModalOpen, setIsMatchModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('perfect'); // 'perfect' or 'near'
+    const [expandedMatchingRows, setExpandedMatchingRows] = useState({});
+
+    const toggleMatchingSkills = (id) => {
+        setExpandedMatchingRows(prev => ({ ...prev, [id]: !prev[id] }));
+    };
 
     useEffect(() => {
         fetchProjects();
@@ -135,7 +140,7 @@ const Projects = () => {
 
             {/* Create Project Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
+                <div className="fixed inset-0 bg-black-50 flex items-center justify-center z-50 overflow-y-auto">
                     <div className="bg-surface p-6 rounded-lg w-full max-w-2xl animate-fade-in shadow-xl m-4">
                         <h2 className="text-lg font-bold mb-4">Create New Project</h2>
                         <form onSubmit={handleSubmit}>
@@ -198,7 +203,7 @@ const Projects = () => {
 
             {/* Matching Modal */}
             {isMatchModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black-50 flex items-center justify-center z-50">
                     <div className="bg-surface p-6 rounded-lg w-full max-w-4xl h-[80vh] flex flex-col animate-fade-in shadow-xl">
                         <div className="flex justify-between mb-4 flex-shrink-0">
                             <h2 className="text-xl font-bold">Matching Personnel for {matchingProject?.name}</h2>
@@ -249,11 +254,19 @@ const Projects = () => {
 
                                                 {/* Skills & Gaps */}
                                                 <div className="mb-3">
-                                                    {m.matched_skills.map((ms, i) => (
+                                                    {(expandedMatchingRows[m.id] ? m.matched_skills : m.matched_skills.slice(0, 5)).map((ms, i) => (
                                                         <span key={i} className="badge badge-green text-xs mr-1 mb-1 inline-block">
                                                             {ms.skill_name || ms.name} (Lvl {ms.proficiency_level})
                                                         </span>
                                                     ))}
+                                                    {m.matched_skills.length > 5 && (
+                                                        <button
+                                                            onClick={() => toggleMatchingSkills(m.id)}
+                                                            className="text-[10px] font-bold text-primary hover:underline cursor-pointer ml-1"
+                                                        >
+                                                            {expandedMatchingRows[m.id] ? 'Hide' : `+${m.matched_skills.length - 5} more`}
+                                                        </button>
+                                                    )}
                                                     {m.gaps.map((gap, i) => (
                                                         <span key={i} className="badge badge-yellow text-xs mr-1 mb-1 inline-block border border-red-200">
                                                             Missing: {gap.skill}

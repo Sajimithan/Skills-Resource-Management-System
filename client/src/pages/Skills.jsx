@@ -73,7 +73,7 @@ const Skills = () => {
 
             {/* Add Skill Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black-50 flex items-center justify-center z-50">
                     <div className="bg-surface p-6 rounded-lg w-full max-w-md animate-fade-in shadow-xl">
                         <div className="flex justify-between mb-4">
                             <h2 className="text-lg font-bold">Add New Skill</h2>
