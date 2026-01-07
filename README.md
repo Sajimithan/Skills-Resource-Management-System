@@ -108,6 +108,3 @@ You can run the backend either locally or via Docker.
     npm run dev
     ```
 4.  Open your browser at `http://localhost:5173`.
-
-## API Documentation
-The backend exposes a RESTful API. See `API_TESTING_GUIDE.md` for detailed testing instructions and example headers/bodies.
