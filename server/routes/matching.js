@@ -231,14 +231,14 @@ router.get('/:projectId', async (req, res) => {
                 };
             });
 
-        // 4. Categorize - Sort by Overall Match now!
+        // 4. Categorize - Sort by Fit Score (Skill Match) now, as requested
         const perfectMatchList = processedCandidates
-            .filter(c => c.overallMatch >= 80)
-            .sort((a, b) => b.overallMatch - a.overallMatch);
+            .filter(c => c.fitScore >= 80)
+            .sort((a, b) => b.fitScore - a.fitScore);
 
         const nearMatchList = processedCandidates
-            .filter(c => c.overallMatch >= 50 && c.overallMatch < 80)
-            .sort((a, b) => b.overallMatch - a.overallMatch);
+            .filter(c => c.fitScore >= 50 && c.fitScore < 80)
+            .sort((a, b) => b.fitScore - a.fitScore);
 
         res.json({
             project,

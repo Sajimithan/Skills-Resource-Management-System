@@ -105,6 +105,16 @@ textarea {
   padding: 0.5rem;
 }
 
+.btn-danger {
+  background-color: var(--danger);
+  color: white;
+  border-color: var(--danger);
+}
+
+.btn-danger:hover {
+  filter: brightness(1.1);
+}
+
 .card {
   background: var(--surface);
   border-radius: var(--radius);
@@ -740,4 +750,162 @@ textarea {
   .justify-between {
     gap: 10px;
   }
+}
+
+/* Roadmap & Timeline Styles */
+.roadmap-container {
+  position: relative;
+  width: 100%;
+}
+
+.roadmap-grid {
+  position: absolute;
+  inset: 0;
+  top: 2rem;
+  z-index: 0;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  opacity: 0.1;
+}
+
+.roadmap-tick-line {
+  height: 100%;
+  border-right: 1px dashed var(--text-main);
+}
+
+.roadmap-row {
+  position: relative;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.roadmap-label {
+  width: 12rem;
+  flex-shrink: 0;
+  padding-right: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+.roadmap-track {
+  flex: 1;
+  height: 100%;
+  position: relative;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.roadmap-bar {
+  position: absolute;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+.roadmap-bar:hover {
+  transform: scale(1.01);
+  filter: brightness(1.1);
+  z-index: 20;
+}
+
+.roadmap-bar.active {
+  background: linear-gradient(90deg, #10B981 0%, #059669 100%);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.roadmap-bar.planning {
+  background: linear-gradient(90deg, #3B82F6 0%, #2563EB 100%);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.today-indicator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 2px solid var(--danger);
+  z-index: 30;
+  pointer-events: none;
+}
+
+.today-label {
+  background: var(--danger);
+  color: white;
+  font-size: 9px;
+  padding: 2px 4px;
+  border-radius: 0 0 4px 4px;
+  position: absolute;
+  top: -4px;
+  left: -16px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+/* Extra Utility Mixins */
+.bg-white-5 {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.bg-white-10 {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.border-white-10 {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.z-20 {
+  z-index: 20;
+}
+
+.pointer-events-none {
+  pointer-events: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(141, 21, 58, 0.5);
+}
+
+.line-clamp-1 {
+  display: -webkit-box;
+  line-clamp: 1;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.font-mono {
+  font-family: monospace;
 }

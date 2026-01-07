@@ -65,8 +65,10 @@ const Personnel = () => {
     const handleDelete = async (id) => {
         setConfirmModal({
             isOpen: true,
-            message: 'Are you sure you want to delete this person?',
+            message: 'All skills and project assignments for this person will be removed. This action cannot be undone.',
             type: 'confirm',
+            requiresText: 'delete',
+            confirmText: 'Delete Personnel',
             onConfirm: async () => {
                 try {
                     await personnelApi.delete(id);
@@ -465,6 +467,8 @@ const Personnel = () => {
                 message={confirmModal.message}
                 type={confirmModal.type}
                 onConfirm={confirmModal.onConfirm}
+                requiresText={confirmModal.requiresText}
+                confirmText={confirmModal.confirmText}
             />
         </div>
     );

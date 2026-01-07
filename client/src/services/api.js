@@ -29,6 +29,7 @@ export const projectsApi = {
     assignPersonnel: (id, data) => api.post(`/projects/${id}/assign`, data),
     unassign: (projectId, personnelId) => api.delete(`/projects/${projectId}/assign/${personnelId}`),
     rateSkills: (id, ratings) => api.post(`/projects/${id}/rate`, { ratings }),
+    delete: (id) => api.delete(`/projects/${id}`),
 };
 
 export const matchingApi = {

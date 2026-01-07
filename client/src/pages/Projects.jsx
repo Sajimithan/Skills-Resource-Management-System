@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { projectsApi, skillsApi, matchingApi } from '../services/api';
-import { Plus, CheckCircle, Clock, X } from 'lucide-react';
+import { Plus, CheckCircle, Clock, X, Trash } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import MagicBento from '../components/MagicBento';
 import PillNav from '../components/PillNav';
@@ -8,8 +8,18 @@ import ConfirmationModal from '../components/ConfirmationModal';
 
 const Projects = () => {
     const projectBentoItems = [
-        { title: 'Project Tracking', description: 'Real-time status updates at a glance.', label: 'Management' },
-        { title: 'Skill Matching', description: 'Find the perfect personnel for every task.', label: 'AI Tools' },
+        {
+            title: 'Project Tracking',
+            description: 'Real-time status updates at a glance.',
+            label: 'Management',
+            onClick: () => setActiveProjectTab('active')
+        },
+        {
+            title: 'Skill Matching',
+            description: 'Find the perfect personnel for every task.',
+            label: 'AI Tools',
+            onClick: () => setActiveProjectTab('active')
+        },
         {
             title: 'Timeline Views',
             description: 'Stay on top of critical deadlines.',
@@ -205,6 +215,25 @@ const Projects = () => {
         }
     };
 
+    const handleDeleteProject = async (id) => {
+        setConfirmModal({
+            isOpen: true,
+            message: 'This project and all its data will be permanently removed. This action cannot be undone.',
+            type: 'confirm',
+            requiresText: 'delete',
+            confirmText: 'Delete Project',
+            onConfirm: async () => {
+                try {
+                    await projectsApi.delete(id);
+                    fetchProjects();
+                    setConfirmModal({ isOpen: true, message: 'Project deleted successfully!', type: 'success' });
+                } catch (err) {
+                    setConfirmModal({ isOpen: true, message: 'Error: ' + err.message, type: 'error' });
+                }
+            }
+        });
+    };
+
     return (
         <div className="animate-fade-in">
             <div className="flex justify-between items-center mb-6">
@@ -260,24 +289,26 @@ const Projects = () => {
                 <div className="animate-fade-in">
                     <div className="grid-cols-2">
                         {projects.filter(p => p.status !== 'Completed').map(p => (
-                            <div key={p.id} className="card">
-                                <div className="flex justify-between mb-2">
-                                    <select
-                                        className={`text-xs font-bold px-3 py-1.5 rounded-full border border-white/10 cursor-pointer outline-none transition-all ${p.status === 'Active' ? 'bg-green-500/20 text-green-400' :
-                                            p.status === 'Planning' ? 'bg-blue-500/20 text-blue-400' :
-                                                'bg-white/5 text-text-muted'
-                                            }`}
-                                        value={p.status}
-                                        onChange={(e) => handleStatusChange(p.id, e.target.value)}
-                                    >
-                                        <option value="Planning">Planning</option>
-                                        <option value="Active">Active</option>
-                                        <option value="Completed">Completed</option>
-                                    </select>
-                                    <div className="text-xs text-text-muted">{new Date(p.created_at).toLocaleDateString()}</div>
+                            <div key={p.id} className="card flex flex-col h-full">
+                                <div className="flex-1">
+                                    <div className="flex justify-between mb-2">
+                                        <select
+                                            className={`text-xs font-bold px-3 py-1.5 rounded-full border border-white/10 cursor-pointer outline-none transition-all ${p.status === 'Active' ? 'bg-green-500/20 text-green-400' :
+                                                p.status === 'Planning' ? 'bg-blue-500/20 text-blue-400' :
+                                                    'bg-white/5 text-text-muted'
+                                                }`}
+                                            value={p.status}
+                                            onChange={(e) => handleStatusChange(p.id, e.target.value)}
+                                        >
+                                            <option value="Planning">Planning</option>
+                                            <option value="Active">Active</option>
+                                            <option value="Completed">Completed</option>
+                                        </select>
+                                        <div className="text-xs text-text-muted">{new Date(p.created_at).toLocaleDateString()}</div>
+                                    </div>
+                                    <h3 className="text-xl font-bold mb-2">{p.name}</h3>
+                                    <p className="text-text-muted mb-4">{p.description}</p>
                                 </div>
-                                <h3 className="text-xl font-bold mb-2">{p.name}</h3>
-                                <p className="text-text-muted mb-4">{p.description}</p>
 
                                 <div className="flex justify-between items-center border-t border-border pt-4 mt-2 gap-3">
                                     <div className="text-sm">
@@ -285,6 +316,9 @@ const Projects = () => {
                                         {p.start_date ? new Date(p.start_date).toLocaleDateString() : 'TBD'} - {p.end_date ? new Date(p.end_date).toLocaleDateString() : 'TBD'}
                                     </div>
                                     <div className="flex gap-2">
+                                        <button onClick={() => handleDeleteProject(p.id)} className="btn btn-icon text-muted hover:text-red-500">
+                                            <Trash size={16} />
+                                        </button>
                                         <button onClick={() => handleViewTeam(p)} className="btn btn-secondary text-sm rounded-full px-6">View Team</button>
                                         <button onClick={() => handleFindMatch(p)} className="btn btn-primary text-sm rounded-full px-6">Find Match</button>
                                     </div>
@@ -346,18 +380,18 @@ const Projects = () => {
                             }
 
                             return (
-                                <div className="relative w-full">
+                                <div className="roadmap-container">
                                     {/* Timeline Header (Ticks) */}
-                                    <div className="flex justify-between border-b border-white/10 pb-2 mb-4 text-xs text-text-muted uppercase tracking-wider font-bold">
+                                    <div className="flex justify-between border-b border-white-10 pb-2 mb-4 text-xs text-text-muted uppercase tracking-wider font-bold">
                                         {ticks.map((t, i) => (
                                             <span key={i}>{t.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                                         ))}
                                     </div>
 
                                     {/* Grid Lines */}
-                                    <div className="absolute inset-0 top-8 z-0 flex justify-between pointer-events-none opacity-20">
+                                    <div className="roadmap-grid">
                                         {ticks.map((_, i) => (
-                                            <div key={i} className="h-full border-r border-dashed border-white"></div>
+                                            <div key={i} className="roadmap-tick-line"></div>
                                         ))}
                                     </div>
 
@@ -370,28 +404,25 @@ const Projects = () => {
                                             const width = ((end - start) / totalDuration) * 100;
 
                                             return (
-                                                <div key={p.id} className="relative h-12 flex items-center group">
+                                                <div key={p.id} className="roadmap-row group">
                                                     {/* Row Label (Desktop) */}
-                                                    <div className="w-48 flex-shrink-0 pr-4 truncate text-sm font-medium text-text-muted group-hover:text-text-main transition-colors hidden md:block">
+                                                    <div className="roadmap-label hidden md:block group-hover:text-text-main">
                                                         {p.name}
                                                     </div>
 
                                                     {/* Bar Container */}
-                                                    <div className="flex-1 h-full relative bg-white/5 rounded-lg overflow-hidden group-hover:bg-white/10 transition-colors">
+                                                    <div className="roadmap-track group-hover:bg-white-10 transition-colors">
                                                         <div
-                                                            className={`absolute top-2 bottom-2 rounded-md shadow-lg flex items-center px-3 whitespace-nowrap overflow-hidden transition-all duration-500 hover:scale-[1.01] cursor-pointer ${p.status === 'Active'
-                                                                ? 'bg-gradient-to-r from-green-500/80 to-green-600/80 border border-green-400/30 text-white'
-                                                                : 'bg-gradient-to-r from-yellow-500/80 to-yellow-600/80 border border-yellow-400/30 text-white'
-                                                                }`}
+                                                            className={`roadmap-bar ${p.status === 'Active' ? 'active' : 'planning'}`}
                                                             style={{
                                                                 left: `${left}%`,
                                                                 width: `${width}%`,
-                                                                minWidth: '4px'
+                                                                minWidth: '8px'
                                                             }}
                                                             title={`${p.name}: ${start.toLocaleDateString()} - ${end.toLocaleDateString()}`}
                                                             onClick={() => handleViewTeam(p)}
                                                         >
-                                                            <span className="text-xs font-bold drop-shadow-md truncate">{p.name}</span>
+                                                            <span className="truncate">{p.name}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -406,10 +437,10 @@ const Projects = () => {
                                             const nowLeft = ((now - minDate) / totalDuration) * 100;
                                             return (
                                                 <div
-                                                    className="absolute top-0 bottom-0 border-l-2 border-red-500 z-20 pointer-events-none"
+                                                    className="today-indicator"
                                                     style={{ left: `${nowLeft}%` }}
                                                 >
-                                                    <div className="bg-red-500 text-white text-[9px] px-1 py-0.5 rounded-b absolute -top-1 -left-4 font-bold tracking-widest uppercase">Today</div>
+                                                    <div className="today-label">Today</div>
                                                 </div>
                                             );
                                         }
@@ -426,24 +457,26 @@ const Projects = () => {
                 <div className="animate-fade-in">
                     <div className="grid-cols-2 opacity-90 transition-all">
                         {projects.filter(p => p.status === 'Completed').map(p => (
-                            <div key={p.id} className="card">
-                                <div className="flex justify-between mb-2">
-                                    <select
-                                        className={`text-xs font-bold px-3 py-1.5 rounded-full border border-white/10 cursor-pointer outline-none transition-all ${p.status === 'Active' ? 'bg-green-500/20 text-green-400' :
-                                            p.status === 'Planning' ? 'bg-blue-500/20 text-blue-400' :
-                                                'bg-white/5 text-text-muted'
-                                            }`}
-                                        value={p.status}
-                                        onChange={(e) => handleStatusChange(p.id, e.target.value)}
-                                    >
-                                        <option value="Planning">Planning</option>
-                                        <option value="Active">Active</option>
-                                        <option value="Completed">Completed</option>
-                                    </select>
-                                    <div className="text-xs text-text-muted">{new Date(p.created_at).toLocaleDateString()}</div>
+                            <div key={p.id} className="card flex flex-col h-full">
+                                <div className="flex-1">
+                                    <div className="flex justify-between mb-2">
+                                        <select
+                                            className={`text-xs font-bold px-3 py-1.5 rounded-full border border-white/10 cursor-pointer outline-none transition-all ${p.status === 'Active' ? 'bg-green-500/20 text-green-400' :
+                                                p.status === 'Planning' ? 'bg-blue-500/20 text-blue-400' :
+                                                    'bg-white/5 text-text-muted'
+                                                }`}
+                                            value={p.status}
+                                            onChange={(e) => handleStatusChange(p.id, e.target.value)}
+                                        >
+                                            <option value="Planning">Planning</option>
+                                            <option value="Active">Active</option>
+                                            <option value="Completed">Completed</option>
+                                        </select>
+                                        <div className="text-xs text-text-muted">{new Date(p.created_at).toLocaleDateString()}</div>
+                                    </div>
+                                    <h3 className="text-xl font-bold mb-2 text-text-muted">{p.name}</h3>
+                                    <p className="text-text-muted mb-4 text-sm">{p.description}</p>
                                 </div>
-                                <h3 className="text-xl font-bold mb-2 text-text-muted">{p.name}</h3>
-                                <p className="text-text-muted mb-4 text-sm">{p.description}</p>
 
                                 <div className="flex justify-between items-center border-t border-border pt-4 mt-2 gap-3">
                                     <div className="text-sm text-text-muted">
@@ -451,6 +484,9 @@ const Projects = () => {
                                         Completed on {p.end_date ? new Date(p.end_date).toLocaleDateString() : 'recent date'}
                                     </div>
                                     <div className="flex gap-2">
+                                        <button onClick={() => handleDeleteProject(p.id)} className="btn btn-icon text-muted hover:text-red-500">
+                                            <Trash size={16} />
+                                        </button>
                                         <button onClick={() => handleViewTeam(p)} className="btn btn-secondary text-sm rounded-full px-6">View Team</button>
                                         <button onClick={() => handleFindMatch(p)} className="btn btn-secondary text-sm rounded-full px-6">Review Matches</button>
                                     </div>
@@ -604,13 +640,13 @@ const Projects = () => {
                                                 <div className="flex gap-4 mb-3 text-sm">
                                                     <div className="flex flex-col gap-1">
                                                         <div className="flex items-center gap-1">
-                                                            <span className="text-text-muted text-xs font-medium">Efficiency Score:</span>
-                                                            <span className={`font-black text-xl ${m.overallMatch >= 80 ? 'text-primary' : m.overallMatch >= 50 ? 'text-yellow-500' : 'text-text-muted'}`}>
-                                                                {m.overallMatch}%
+                                                            <span className="text-text-muted text-xs font-medium">Skill Fit Score:</span>
+                                                            <span className={`font-black text-xl ${m.fitScore >= 80 ? 'text-primary' : m.fitScore >= 50 ? 'text-yellow-500' : 'text-text-muted'}`}>
+                                                                {m.fitScore}%
                                                             </span>
                                                         </div>
                                                         <div className="flex gap-3 text-[10px] text-text-muted">
-                                                            <span title="Skill Fit">Fit: <b className="text-text-main">{m.fitScore}%</b></span>
+                                                            <span title="Efficiency">Efficiency: <b className="text-text-main">{m.overallMatch}%</b></span>
                                                             <span title="Availability">Avail: <b className="text-text-main">{m.utilizationPct > 80 ? '0%' : `${100 - m.utilizationPct}%`}</b></span>
                                                             {m.performanceScore !== null && (
                                                                 <span title="Past Performance">Perf: <b className="text-text-main">{m.performanceScore}%</b></span>
@@ -762,6 +798,8 @@ const Projects = () => {
                 message={confirmModal.message}
                 type={confirmModal.type}
                 onConfirm={confirmModal.onConfirm}
+                requiresText={confirmModal.requiresText}
+                confirmText={confirmModal.confirmText}
             />
         </div>
     );

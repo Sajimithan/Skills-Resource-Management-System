@@ -220,4 +220,14 @@ router.put('/:id', async (req, res) => {
     }
 });
 
+// Delete project
+router.delete('/:id', async (req, res) => {
+    try {
+        await db.query('DELETE FROM projects WHERE id = ?', [req.params.id]);
+        res.json({ message: 'Project deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;
